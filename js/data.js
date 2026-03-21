@@ -127,8 +127,11 @@ const checkAuth = (allowedRoles = []) => {
     
     if (allowedRoles.length > 0 && !allowedRoles.includes(user.role)) {
         // Not authorized, redirect based on role
-        if (user.role === 'admin') window.location.href = 'admin.html';
-        else window.location.href = 'customer.html';
+        if (user.role === 'admin') {
+            if (!window.location.href.includes('admin.html')) window.location.href = 'admin.html';
+        } else {
+            if (!window.location.href.includes('customer.html')) window.location.href = 'customer.html';
+        }
         return null; // Ensure execution stops
     }
     
