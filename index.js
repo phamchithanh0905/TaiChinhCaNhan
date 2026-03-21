@@ -135,20 +135,20 @@ app.post('/api/login', async (req, res) => {
 
 app.post('/api/register', async (req, res) => {
     try {
-        const { fullname, phone, idCard, address, job, income, regUsername, regPassword } = req.body;
+        const { name, phone, idCard, address, job, income, username, password } = req.body;
         
         // Ràng buộc Server-side
         if (!/^0[0-9]{9}$/.test(phone)) return res.status(400).json({ message: 'Số điện thoại phải đúng 10 chữ số và bắt đầu bằng số 0' });
         if (!/^[0-9]{12}$/.test(idCard)) return res.status(400).json({ message: 'Số CCCD phải đúng 12 chữ số' });
 
-        const checkUser = await pool.query('SELECT * FROM Users WHERE username = $1', [regUsername]);
+        const checkUser = await pool.query('SELECT * FROM Users WHERE username = $1', [username]);
         if (checkUser.rows.length > 0) return res.status(400).json({ message: 'Tên đăng nhập đã tồn tại.' });
         
-        const hashedPassword = await bcrypt.hash(regPassword, 10);
+        const hashedPassword = await bcrypt.hash(password, 10);
         const id = 'U' + Date.now();
         await pool.query(
             'INSERT INTO Users (id, username, password, name, role, phone, id_card, address, job, income) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)',
-            [id, username, hashedPassword, name, 'customer', phone, idCard, address, job, income]
+            [id, username, hashedPassword, name, 'customer', phone, idCard, address, job, income || 0]
         );
             
         res.status(201).json({ message: 'Đăng ký thành công!' });

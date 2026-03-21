@@ -147,9 +147,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 headers,
                 body: JSON.stringify(profileData)
             });
+
             if (res.ok) {
                 Toast.success('Cập nhật hồ sơ thành công!');
-                fetchAllData(); // Refresh UI to unlock Apply
+                await fetchAllData(); // Ensure userProfile is updated
+                renderProfile(); // Switch to summary view
+            } else {
+                const errorData = await res.json();
+                Toast.error(errorData.message || 'Cập nhật thất bại');
             }
         } catch (err) {
             Toast.error('Lỗi khi cập nhật hồ sơ');
