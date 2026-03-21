@@ -39,7 +39,8 @@ document.addEventListener("DOMContentLoaded", () => {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
     };
-
+    const fetchAllData = async () => {
+        try {
             const [usersRes, loansRes, settingsRes, notifRes] = await Promise.all([
                 fetch(`${Config.BASE_URL}/api/users`, { headers }),
                 fetch(`${Config.BASE_URL}/api/loans`, { headers }),
