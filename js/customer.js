@@ -65,6 +65,7 @@ document.addEventListener("DOMContentLoaded", () => {
             refreshUI();
         } catch (err) {
             console.error('Error fetching data', err);
+            Toast.error('Lỗi nạp dữ liệu từ Server! Vui lòng thử lại.');
         }
     };
 

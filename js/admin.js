@@ -66,6 +66,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 
         } catch (err) {
             console.error('Error fetching data', err);
+            Toast.error('Lỗi kết nối Server Admin! Vui lòng thử lại.');
         }
     };
 
