@@ -64,8 +64,55 @@
                     <div class="page-header">
                         <h1>Thông Tin Cá Nhân</h1>
                     </div>
-                    <div class="glass-panel" style="padding: 2rem; max-width: 800px; margin: 0 auto;">
-                        <p style="color: var(--text-secondary); margin-bottom: 2rem;">Vui lòng khai báo đầy đủ thông tin để hệ thống phê duyệt các tính năng vay vốn.</p>
+                    
+                    <!-- Profile Summary View (Visible when profile is complete) -->
+                    <div id="profileSummaryView" class="glass-panel" style="padding: 2.5rem; max-width: 800px; margin: 0 auto; display: none;">
+                        <div style="text-align:center; margin-bottom:2rem;">
+                            <div style="width:80px; height:80px; background:var(--success-color); border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 1rem; color:white; font-size:2.5rem; box-shadow: 0 0 20px rgba(46, 196, 182, 0.3);">
+                                <i class="fas fa-user-check"></i>
+                            </div>
+                            <h2 style="margin-bottom: 5px;">Hồ Sơ Đã Hoàn Thiện</h2>
+                            <p style="color: var(--text-secondary);">Thông tin của bạn đã được ghi nhận vào hệ thống tín dụng.</p>
+                        </div>
+
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1.5rem; background: rgba(255,255,255,0.03); padding:1.5rem; border-radius:15px; border: 1px solid var(--border-color);">
+                            <div>
+                                <small style="color:var(--text-secondary); display:block; margin-bottom:5px; font-weight:600; text-transform: uppercase; font-size: 0.75rem;">Số Điện Thoại</small>
+                                <div id="s_phone" style="font-weight:600; font-size:1.1rem; color: var(--text-primary);">-</div>
+                            </div>
+                            <div>
+                                <small style="color:var(--text-secondary); display:block; margin-bottom:5px; font-weight:600; text-transform: uppercase; font-size: 0.75rem;">Số CCCD</small>
+                                <div id="s_idCard" style="font-weight:600; font-size:1.1rem; color: var(--text-primary);">-</div>
+                            </div>
+                            <div style="grid-column: span 2;">
+                                <small style="color:var(--text-secondary); display:block; margin-bottom:5px; font-weight:600; text-transform: uppercase; font-size: 0.75rem;">Địa Chỉ Thường Trú</small>
+                                <div id="s_address" style="font-weight:600; font-size:1.1rem; color: var(--text-primary);">-</div>
+                            </div>
+                            <div>
+                                <small style="color:var(--text-secondary); display:block; margin-bottom:5px; font-weight:600; text-transform: uppercase; font-size: 0.75rem;">Nghề Nghiệp</small>
+                                <div id="s_job" style="font-weight:600; font-size:1.1rem; color: var(--text-primary);">-</div>
+                            </div>
+                            <div>
+                                <small style="color:var(--text-secondary); display:block; margin-bottom:5px; font-weight:600; text-transform: uppercase; font-size: 0.75rem;">Thu Nhập Hàng Tháng</small>
+                                <div id="s_income" style="font-weight:700; font-size:1.2rem; color: var(--success-color);">-</div>
+                            </div>
+                        </div>
+
+                        <div style="margin-top:2.5rem; display:flex; gap:1.2rem;">
+                            <button class="btn btn-secondary" id="btnEditProfile" style="flex:1; padding: 1rem;">
+                                <i class="fas fa-edit"></i> Chỉnh Sửa Hồ Sơ
+                            </button>
+                            <button class="btn btn-primary" id="btnGoToApply" style="flex:2; padding: 1rem; font-weight: 700;">
+                                <i class="fas fa-paper-plane"></i> Đăng Ký Vay Ngay
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Profile Edit View (Visible when profile is empty or edit button clicked) -->
+                    <div id="profileEditView" class="glass-panel" style="padding: 2rem; max-width: 800px; margin: 0 auto;">
+                        <div style="margin-bottom: 2rem;">
+                            <p style="color: var(--text-secondary);">Vui lòng khai báo đầy đủ thông tin để hệ thống có cơ sở phê duyệt các tính năng vay vốn của bạn.</p>
+                        </div>
                         <form id="updateProfileForm">
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
                                 <div class="form-group">
@@ -89,8 +136,8 @@
                                     <input type="text" class="form-control" name="income" id="incomeInput" placeholder="Vd: 15,000,000" required>
                                 </div>
                             </div>
-                            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 2rem;">
-                                <i class="fas fa-save"></i> Cập Nhật Hồ Sơ
+                            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 2rem; padding: 1rem; font-weight: 600;">
+                                <i class="fas fa-save"></i> Lưu & Hoàn Tất Hồ Sơ
                             </button>
                         </form>
                     </div>

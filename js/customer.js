@@ -71,19 +71,50 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const renderProfile = () => {
         if (!userProfile) return;
-        const form = document.getElementById('updateProfileForm');
-        if (!form) return;
         
-        form.phone.value = userProfile.phone || '';
-        form.idCard.value = userProfile.id_card || '';
-        form.address.value = userProfile.address || '';
-        form.job.value = userProfile.job || '';
-        
-        const incomeInput = document.getElementById('incomeInput');
-        if (incomeInput && userProfile.income) {
-            incomeInput.value = new Intl.NumberFormat('vi-VN').format(userProfile.income);
+        const summaryView = document.getElementById('profileSummaryView');
+        const editView = document.getElementById('profileEditView');
+        if (!summaryView || !editView) return;
+
+        const isComplete = isProfileComplete();
+
+        if (isComplete) {
+            summaryView.style.display = 'block';
+            editView.style.display = 'none';
+            
+            document.getElementById('s_phone').textContent = userProfile.phone;
+            document.getElementById('s_idCard').textContent = userProfile.id_card;
+            document.getElementById('s_address').textContent = userProfile.address;
+            document.getElementById('s_job').textContent = userProfile.job;
+            document.getElementById('s_income').textContent = formatCurrency(userProfile.income);
+        } else {
+            summaryView.style.display = 'none';
+            editView.style.display = 'block';
+            
+            const form = document.getElementById('updateProfileForm');
+            if (form) {
+                form.phone.value = userProfile.phone || '';
+                form.idCard.value = userProfile.id_card || '';
+                form.address.value = userProfile.address || '';
+                form.job.value = userProfile.job || '';
+                
+                const incomeInput = document.getElementById('incomeInput');
+                if (incomeInput && userProfile.income) {
+                    incomeInput.value = new Intl.NumberFormat('vi-VN').format(userProfile.income);
+                }
+            }
         }
     };
+
+    document.getElementById('btnEditProfile')?.addEventListener('click', () => {
+        document.getElementById('profileSummaryView').style.display = 'none';
+        document.getElementById('profileEditView').style.display = 'block';
+    });
+    
+    document.getElementById('btnGoToApply')?.addEventListener('click', () => {
+        const applyLink = document.querySelector('.nav-links li[data-view="apply"]');
+        if (applyLink) applyLink.click();
+    });
 
     // Formatter cho ô thu nhập
     document.getElementById('incomeInput')?.addEventListener('input', (e) => {
