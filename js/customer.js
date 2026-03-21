@@ -58,30 +58,21 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     const updateDurationOptions = (settings) => {
-        const select = document.querySelector('select[name="durationMonths"]');
-        if (!select) return;
-
-        const rate10 = settings.find(s => s.id === 'rate_10')?.is_active;
-        const rate15 = settings.find(s => s.id === 'rate_15')?.is_active;
-        const rate17 = settings.find(s => s.id === 'rate_17')?.is_active;
+        const rateSelect = document.getElementById('interestRateSelect');
+        if (!rateSelect) return;
 
         let options = '';
-        if (rate10) {
-            options += '<option value="1">1 Tháng (Lãi 10%/tháng)</option>';
-            options += '<option value="2">2 Tháng (Lãi 10%/tháng)</option>';
-        }
-        if (rate15) {
-            options += '<option value="3">3 Tháng (Lãi 15%/tháng)</option>';
-            options += '<option value="6">6 Tháng (Lãi 15%/tháng)</option>';
-        }
-        if (rate17) {
-            options += '<option value="12" selected>12 Tháng (Lãi 17%/tháng)</option>';
-        }
+        settings.forEach(s => {
+            if (s.is_active) {
+                options += `<option value="${s.value_int}">${s.value_int}% / Tháng</option>`;
+            }
+        });
 
-        if (!options) {
-            options = '<option value="">Hiện tại không có gói nào khả dụng</option>';
+        if (options === '') {
+            options = '<option value="">Hiện tại không có mức lãi khả dụng</option>';
         }
-        select.innerHTML = options;
+        rateSelect.innerHTML = options;
+        updateEstimate(); // Trigger re-calc
     };
 
     const refreshUI = () => {
@@ -338,14 +329,16 @@ await fetch(`${Config.BASE_URL}/api/loans/cancel/${id}`, { method: 'DELETE', hea
     const estimateDisplay = document.getElementById('loanEstimateDisplay');
 
     const updateEstimate = () => {
-        if (!amountInput) return; // In case we're not on customer applying view
+        const amountInput = document.querySelector('input[name="amount"]');
+        const durationInput = document.querySelector('select[name="durationMonths"]');
+        const rateSelect = document.querySelector('select[name="interestRate"]');
+
+        if (!amountInput || !rateSelect) return;
         const amt = parseFloat(amountInput.value);
         const months = parseInt(durationInput.value);
-        let interest = 10;
-        if (months >= 3 && months <= 6) interest = 15;
-        if (months >= 12) interest = 17;
+        const interest = parseFloat(rateSelect.value);
 
-        if (amt >= 1000000) {
+        if (amt >= 1000000 && !isNaN(interest)) {
             const summary = calculateLoanSummary(amt, interest, months);
             estimateDisplay.innerHTML = `
                 <div style="display:flex; justify-content: space-between; margin-bottom: 5px;">
@@ -354,29 +347,30 @@ await fetch(`${Config.BASE_URL}/api/loans/cancel/${id}`, { method: 'DELETE', hea
                 <div style="display:flex; justify-content: space-between; margin-bottom: 5px;">
                     <span>Tổng Gốc + Lãi phải trả:</span> <strong>${formatCurrency(summary.totalPayable)}</strong>
                 </div>
-                <div style="display:flex; justify-content: space-between;">
-                    <span>Trả góp mỗi tháng:</span> <strong style="color:var(--danger-color)">${formatCurrency(summary.monthlyInstallment)}</strong>
+                <div style="display:flex; justify-content: space-between; color: var(--danger-color); font-weight:700;">
+                    <span>Trả góp mỗi tháng:</span> <strong>${formatCurrency(Math.round(summary.totalPayable / months))} đ</strong>
                 </div>
             `;
         } else {
-            estimateDisplay.innerHTML = 'Vui lòng nhập số tiền hợp lệ để xem ước tính trả góp.';
+            estimateDisplay.innerHTML = 'Vui lòng nhập số tiền và chọn lãi suất.';
         }
     };
-    
-    if (amountInput) amountInput.addEventListener('input', updateEstimate);
-    if (durationInput) durationInput.addEventListener('change', updateEstimate);
 
-    // Apply Form
+    if(document.querySelector('form[id="applyLoanForm"]')){
+        document.querySelector('input[name="amount"]').addEventListener('input', updateEstimate);
+        document.querySelector('select[name="durationMonths"]').addEventListener('change', updateEstimate);
+        document.querySelector('select[name="interestRate"]').addEventListener('change', updateEstimate);
+    }
+
     document.getElementById('applyLoanForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const form = e.target;
         const amount = parseFloat(form.amount.value);
         const durationMonths = parseInt(form.durationMonths.value);
-        let interestRate = 10;
-        if (durationMonths >= 3 && durationMonths <= 6) interestRate = 15;
-        if (durationMonths >= 12) interestRate = 17;
+        const interestRate = parseFloat(form.interestRate.value);
 
         if (amount < 1000000) return Toast.warn('Tối thiểu 1,000,000 VNĐ');
+        if (!interestRate) return Toast.warn('Vui lòng chọn lãi suất');
 
         showLoader();
         try {
