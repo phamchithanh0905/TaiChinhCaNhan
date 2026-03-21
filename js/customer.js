@@ -2,11 +2,9 @@
 
 document.addEventListener("DOMContentLoaded", () => {
     // Auth Check
-    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-    if (!currentUser || currentUser.role !== 'customer') {
-        window.location.href = 'login.html';
-        return;
-    }
+    // Gửi gác cổng bảo vệ
+    const currentUser = checkAuth(['customer']);
+    if (!currentUser) return;
     
     document.body.style.opacity = '1';
     document.getElementById('userNameDisplay').textContent = currentUser.name;

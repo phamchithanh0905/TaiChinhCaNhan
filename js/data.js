@@ -81,6 +81,7 @@ const DataService = {
     
     logout: () => {
         localStorage.removeItem('currentUser');
+        localStorage.removeItem('token');
         window.location.href = 'login.html';
     },
 
@@ -105,10 +106,15 @@ const DataService = {
 // Protect Routes
 const checkAuth = (allowedRoles = []) => {
     const user = DataService.getCurrentUser();
+    const token = localStorage.getItem('token');
     
-    // Allow passing no roles if ANY logged in user is allowed
-    if (!user) {
-        window.location.href = 'login.html';
+    // Phải có cả User và Token mới coi là đã đăng nhập
+    if (!user || !token) {
+        localStorage.removeItem('currentUser');
+        localStorage.removeItem('token');
+        if (!window.location.href.includes('login.html')) {
+            window.location.href = 'login.html';
+        }
         return null;
     }
     
