@@ -43,18 +43,41 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const fetchAllData = async () => {
         try {
-            const [loansRes, settingsRes] = await Promise.all([
+            const [loansRes, settingsRes, notifRes] = await Promise.all([
                 fetch(`${Config.BASE_URL}/api/loans?customerId=${currentUser.id}`, { headers }),
-                fetch(`${Config.BASE_URL}/api/settings`, { headers })
+                fetch(`${Config.BASE_URL}/api/settings`, { headers }),
+                fetch(`${Config.BASE_URL}/api/notifications`, { headers })
             ]);
             loans = await loansRes.json();
             const settings = await settingsRes.json();
+            const notifs = await notifRes.json();
             
             updateDurationOptions(settings);
+            renderNotifications(notifs);
             refreshUI();
         } catch (err) {
             console.error('Error fetching data', err);
         }
+    };
+
+    const renderNotifications = (notifs) => {
+        const container = document.getElementById('notifListContainer');
+        if (!container) return;
+
+        if (notifs.length === 0) {
+            container.innerHTML = '<div class="glass-panel" style="padding:2rem; text-align:center; color:var(--text-secondary);">Hiện tại hệ thống không có thông báo mới nào.</div>';
+            return;
+        }
+
+        container.innerHTML = notifs.map(n => `
+            <div class="glass-panel" style="padding:1.5rem; border-left: 4px solid var(--primary-color);">
+                <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                    <span style="color:var(--primary-color); font-weight:700;"><i class="fas fa-info-circle"></i> THÔNG BÁO</span>
+                    <small style="color:var(--text-secondary);">${new Date(n.created_at).toLocaleString('vi-VN')}</small>
+                </div>
+                <p style="font-size:1.1rem; line-height:1.6;">${n.message}</p>
+            </div>
+        `).join('');
     };
 
     const updateDurationOptions = (settings) => {

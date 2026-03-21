@@ -40,12 +40,11 @@ document.addEventListener("DOMContentLoaded", () => {
         'Authorization': `Bearer ${token}`
     };
 
-    const fetchAllData = async () => {
-        try {
-            // Tải dữ liệu chính (Users và Loans)
-            const [usersRes, loansRes] = await Promise.all([
+            const [usersRes, loansRes, settingsRes, notifRes] = await Promise.all([
                 fetch(`${Config.BASE_URL}/api/users`, { headers }),
-                fetch(`${Config.BASE_URL}/api/loans`, { headers })
+                fetch(`${Config.BASE_URL}/api/loans`, { headers }),
+                fetch(`${Config.BASE_URL}/api/settings`, { headers }),
+                fetch(`${Config.BASE_URL}/api/notifications`, { headers })
             ]);
             
             if (usersRes.ok) users = await usersRes.json();
@@ -53,22 +52,57 @@ document.addEventListener("DOMContentLoaded", () => {
             
             refreshUI();
 
-            // Tải riêng Settings để không làm treo trang nếu chưa có bảng
-            fetch(`${Config.BASE_URL}/api/settings`, { headers })
-                .then(res => res.ok ? res.json() : [])
-                .then(settings => {
-                    renderSettings(settings);
-                })
-                .catch(err => {
-                    console.warn('Cài đặt chưa sẵn sàng:', err);
-                    const container = document.getElementById('settingsList');
-                    if(container) container.innerHTML = '<div style="color:var(--danger-color); padding:1rem;">Vui lòng nạp SQL khởi tạo bảng SystemSettings trong Supabase.</div>';
-                });
+            // Tải riêng Settings
+            if (settingsRes.ok) renderSettings(await settingsRes.json());
+            
+            // Tải riêng Notifications
+            if (notifRes.ok) renderNotifHistory(await notifRes.json());
                 
         } catch (err) {
             console.error('Error fetching data', err);
         }
     };
+
+    const renderNotifHistory = (notifs) => {
+        const container = document.getElementById('notifHistoryList');
+        if (!container) return;
+        
+        container.innerHTML = notifs.map(n => `
+            <div style="padding: 1rem; border-bottom: 1px solid var(--border-color); position:relative;">
+                <p style="margin-bottom:5px; padding-right: 30px;">${n.message}</p>
+                <small style="color: var(--text-secondary)">${new Date(n.created_at).toLocaleString('vi-VN')}</small>
+                <button class="btn-delete-notif" data-id="${n.id}" style="position:absolute; right:0; top:1rem; border:none; background:none; color:var(--danger-color); cursor:pointer;"><i class="fas fa-times"></i></button>
+            </div>
+        `).join('') || '<p style="color:var(--text-secondary)">Chưa có thông báo nào.</p>';
+
+        document.querySelectorAll('.btn-delete-notif').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                const id = e.currentTarget.dataset.id;
+                await fetch(`${Config.BASE_URL}/api/notifications/${id}`, { method: 'DELETE', headers });
+                fetchAllData();
+            });
+        });
+    };
+
+    document.getElementById('sendNotificationForm')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const message = document.getElementById('notifMessage').value;
+        showLoader();
+        try {
+            await fetch(`${Config.BASE_URL}/api/notifications`, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({ message })
+            });
+            Toast.success('Đã phát hành thông báo!');
+            document.getElementById('notifMessage').value = '';
+            fetchAllData();
+        } catch (err) {
+            Toast.error('Lỗi khi gửi thông báo');
+        } finally {
+            hideLoader();
+        }
+    });
 
     const renderSettings = (settings) => {
         const container = document.getElementById('settingsList');

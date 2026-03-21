@@ -23,9 +23,10 @@
                     MyFinance</h2>
             </div>
             <ul class="nav-links">
-                <li class="active" data-view="dashboard"><i class="fas fa-chart-pie"></i> Tổng Quan</li>
-                <li data-view="myloans"><i class="fas fa-wallet"></i> Khoản Vay Của Tôi</li>
-                <li data-view="apply"><i class="fas fa-file-signature"></i> Đăng Ký Vay</li>
+                <li class="active" data-view="dashboard"><i class="fas fa-home"></i> Tổng quan</li>
+                <li data-view="apply"><i class="fas fa-plus-circle"></i> Đăng ký vay</li>
+                <li data-view="myloans"><i class="fas fa-history"></i> Khoản vay của tôi</li>
+                <li data-view="notifications"><i class="fas fa-bell"></i> Thông báo hệ thống</li>
             </ul>
         </aside>
 
@@ -47,6 +48,16 @@
             </nav>
 
             <div class="container">
+                <!-- System Notifications View -->
+                <div class="view-section" id="notificationsView">
+                    <div class="page-header">
+                        <h1>Thông Báo Hệ Thống</h1>
+                    </div>
+                    <div id="notifListContainer" style="display:grid; gap:1.5rem;">
+                        <!-- Notifications injected by JS -->
+                        <div class="loader-inner">Đang tải thông báo...</div>
+                    </div>
+                </div>
                 <!-- Dashboard View -->
                 <div class="view-section active" id="dashboardView">
                     <div class="page-header">

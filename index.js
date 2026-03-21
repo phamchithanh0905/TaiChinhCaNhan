@@ -45,6 +45,40 @@ const verifyToken = (req, res, next) => {
     }
 };
 
+// --- API System Notifications ---
+app.get('/api/notifications', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT * FROM Notifications WHERE is_active = TRUE ORDER BY created_at DESC LIMIT 10');
+        res.json(result.rows);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+app.post('/api/notifications', verifyToken, async (req, res) => {
+    if (req.user.role !== 'admin') return res.status(403).json({ message: 'Admin only' });
+    try {
+        const { message } = req.body;
+        await pool.query('INSERT INTO Notifications (message) VALUES ($1)', [message]);
+        res.status(201).json({ message: 'Notification sent' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+app.delete('/api/notifications/:id', verifyToken, async (req, res) => {
+    if (req.user.role !== 'admin') return res.status(403).json({ message: 'Admin only' });
+    try {
+        await pool.query('UPDATE Notifications SET is_active = FALSE WHERE id = $1', [req.params.id]);
+        res.json({ message: 'Deleted' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 // --- API System Settings ---
 app.get('/api/settings', async (req, res) => {
     try {

@@ -22,6 +22,7 @@
                 <li class="active" data-view="dashboard"><i class="fas fa-home"></i> Tổng Quan</li>
                 <li data-view="loans"><i class="fas fa-money-bill-wave"></i> Quản Lý Khoản Vay</li>
                 <li data-view="users"><i class="fas fa-users"></i> Khách Hàng</li>
+                <li data-view="notifications"><i class="fas fa-bell"></i> Gửi Thông Báo</li>
                 <li data-view="settings"><i class="fas fa-cogs"></i> Cài Đặt Gói Vay</li>
             </ul>
         </aside>
@@ -154,6 +155,30 @@
                                     <!-- Populated by JS -->
                                 </tbody>
                             </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notifications View -->
+                <div class="view-section" id="notificationsView">
+                    <div class="page-header">
+                        <h1>Thông Báo Hệ Thống</h1>
+                    </div>
+                    <div class="glass-panel" style="padding: 2rem; max-width: 600px;">
+                        <h3>Gửi thông báo tới toàn bộ khách hàng</h3>
+                        <form id="sendNotificationForm" style="margin-top: 1.5rem;">
+                            <div class="form-group">
+                                <label class="form-label">Nội dung thông báo</label>
+                                <textarea class="form-control" id="notifMessage" rows="4" placeholder="Nhập tin nhắn..." required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary" style="width: 100%;">
+                                <i class="fas fa-paper-plane"></i> Phát Hành Thông Báo
+                            </button>
+                        </form>
+
+                        <h4 style="margin-top: 2rem;">Lịch sử thông báo gần đây</h4>
+                        <div id="notifHistoryList" style="margin-top: 1rem;">
+                            <!-- Populated by JS -->
                         </div>
                     </div>
                 </div>
