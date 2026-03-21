@@ -66,7 +66,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const isProfileComplete = () => {
         if (!userProfile) return false;
-        return userProfile.phone && userProfile.id_card && userProfile.address && userProfile.job && userProfile.income;
+        const { phone, id_card, address, job, income } = userProfile;
+        return (
+            phone && String(phone).trim() !== "" &&
+            id_card && String(id_card).trim() !== "" &&
+            address && String(address).trim() !== "" &&
+            job && String(job).trim() !== "" &&
+            income !== null && parseFloat(income) > 0
+        );
     };
 
     const renderProfile = () => {
