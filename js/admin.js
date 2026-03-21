@@ -42,19 +42,56 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const fetchAllData = async () => {
         try {
-            const [usersRes, loansRes] = await Promise.all([
+            const [usersRes, loansRes, settingsRes] = await Promise.all([
                 fetch(`${Config.BASE_URL}/api/users`, { headers }),
-                fetch(`${Config.BASE_URL}/api/loans`, { headers })
+                fetch(`${Config.BASE_URL}/api/loans`, { headers }),
+                fetch(`${Config.BASE_URL}/api/settings`, { headers })
             ]);
             
             users = await usersRes.json();
             loans = await loansRes.json();
+            const settings = await settingsRes.json();
             
             refreshUI();
+            renderSettings(settings);
         } catch (err) {
             console.error('Error fetching data', err);
-            alert('Không thể kết nối đến máy chủ.');
+            // alert('Không thể kết nối đến máy chủ.');
         }
+    };
+
+    const renderSettings = (settings) => {
+        const container = document.getElementById('settingsList');
+        if (!container) return;
+        
+        container.innerHTML = settings.map(s => `
+            <div style="display:flex; justify-content: space-between; align-items: center; padding: 1rem; border-bottom: 1px solid var(--border-color);">
+                <div>
+                    <strong style="display:block;">${s.name}</strong>
+                    <small style="color: var(--text-secondary)">Lãi suất: ${s.value_int}%/tháng</small>
+                </div>
+                <div class="form-check form-switch">
+                    <input class="form-check-input setting-toggle" type="checkbox" data-id="${s.id}" ${s.is_active ? 'checked' : ''} style="width: 50px; height: 25px; cursor: pointer;">
+                </div>
+            </div>
+        `).join('');
+
+        document.querySelectorAll('.setting-toggle').forEach(toggle => {
+            toggle.addEventListener('change', async (e) => {
+                const id = e.target.dataset.id;
+                const isActive = e.target.checked;
+                try {
+                    await fetch(`${Config.BASE_URL}/api/settings/${id}`, {
+                        method: 'PUT',
+                        headers,
+                        body: JSON.stringify({ is_active: isActive })
+                    });
+                    Toast.success('Đã cập nhật cài đặt');
+                } catch (err) {
+                    Toast.error('Lỗi cập nhật');
+                }
+            });
+        });
     };
 
     const refreshUI = () => {

@@ -22,6 +22,7 @@
                 <li class="active" data-view="dashboard"><i class="fas fa-home"></i> Tổng Quan</li>
                 <li data-view="loans"><i class="fas fa-money-bill-wave"></i> Quản Lý Khoản Vay</li>
                 <li data-view="users"><i class="fas fa-users"></i> Khách Hàng</li>
+                <li data-view="settings"><i class="fas fa-cogs"></i> Cài Đặt Gói Vay</li>
             </ul>
         </aside>
 
@@ -153,6 +154,22 @@
                                     <!-- Populated by JS -->
                                 </tbody>
                             </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings View -->
+                <div class="view-section" id="settingsView">
+                    <div class="page-header">
+                        <h1>Cài Đặt Hệ Thống</h1>
+                    </div>
+                    <div class="glass-panel" style="padding: 2rem; max-width: 600px;">
+                        <h3>Quản lý các gói lãi suất</h3>
+                        <p style="color: var(--text-secondary); margin-bottom: 2rem;">Bật hoặc tắt các gói lãi suất để khách hàng có thể lựa chọn khi đăng ký vay.</p>
+                        
+                        <div id="settingsList" class="settings-list">
+                            <!-- Populated by JS -->
+                            <div class="loader-inner">Đang tải cài đặt...</div>
                         </div>
                     </div>
                 </div>

@@ -29,6 +29,29 @@ pool.connect((err) => {
     else console.log('Đã kết nối thành công tới Supabase PostgreSQL');
 });
 
+// --- API System Settings ---
+app.get('/api/settings', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT * FROM SystemSettings ORDER BY id ASC');
+        res.json(result.rows);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+app.put('/api/settings/:id', verifyToken, async (req, res) => {
+    if (req.user.role !== 'admin') return res.status(403).json({ message: 'Admin only' });
+    try {
+        const { is_active } = req.body;
+        await pool.query('UPDATE SystemSettings SET is_active = $1 WHERE id = $2', [is_active, req.params.id]);
+        res.json({ message: 'Updated' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 // Middleware xác thực Token
 const verifyToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
