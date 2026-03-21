@@ -78,18 +78,34 @@ document.addEventListener("DOMContentLoaded", () => {
         form.idCard.value = userProfile.id_card || '';
         form.address.value = userProfile.address || '';
         form.job.value = userProfile.job || '';
-        form.income.value = userProfile.income || '';
+        
+        const incomeInput = document.getElementById('incomeInput');
+        if (incomeInput && userProfile.income) {
+            incomeInput.value = new Intl.NumberFormat('vi-VN').format(userProfile.income);
+        }
     };
+
+    // Formatter cho ô thu nhập
+    document.getElementById('incomeInput')?.addEventListener('input', (e) => {
+        let value = e.target.value.replace(/\D/g, "");
+        if (value) {
+            e.target.value = new Intl.NumberFormat('vi-VN').format(value);
+        }
+    });
 
     document.getElementById('updateProfileForm')?.addEventListener('submit', async (e) => {
         e.preventDefault();
         const form = e.target;
+        
+        // Gỡ bỏ dấu phẩy/chấm để lấy số gốc
+        const rawIncome = form.income.value.replace(/\./g, "").replace(/,/g, "");
+
         const profileData = {
             phone: form.phone.value,
             idCard: form.idCard.value,
             address: form.address.value,
             job: form.job.value,
-            income: parseFloat(form.income.value)
+            income: parseFloat(rawIncome) || 0
         };
 
         showLoader();
