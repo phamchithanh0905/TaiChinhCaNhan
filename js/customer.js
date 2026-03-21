@@ -1,14 +1,23 @@
 // customer.js - Integrated with backend
 
 document.addEventListener("DOMContentLoaded", () => {
+    console.log("Diagnostic 2: DOMContentLoaded in customer.js");
+    // alert("Hệ thống Dashboard đang nạp bộ não...");
+
     // Auth Check
-    // Gửi gác cổng bảo vệ
     const currentUser = checkAuth(['customer']);
-    if (!currentUser) return;
+    if (!currentUser) {
+        console.error("Diagnostic Error: No current user found!");
+        return;
+    }
     
-    document.body.style.opacity = '1';
-    document.getElementById('userNameDisplay').textContent = currentUser.name;
-    document.getElementById('welcomeName').textContent = currentUser.name;
+    console.log("Diagnostic: Current User found:", currentUser);
+    // alert("Xin chào: " + currentUser.name);
+
+    document.getElementById('userNameDisplay').textContent = currentUser.name || "Người dùng";
+    if (document.getElementById('welcomeName')) {
+        document.getElementById('welcomeName').textContent = currentUser.name || "Bạn";
+    }
 
     let loans = [];
     let userProfile = null;
