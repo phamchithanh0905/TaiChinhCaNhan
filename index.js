@@ -29,6 +29,22 @@ pool.connect((err) => {
     else console.log('Đã kết nối thành công tới Supabase PostgreSQL');
 });
 
+// Middleware xác thực Token (Đã đưa lên trên để tránh lỗi Hoisting)
+const verifyToken = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    
+    if (!token) return res.status(403).json({ message: 'Không có token truy cập.' });
+
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        req.user = decoded;
+        next();
+    } catch (err) {
+        return res.status(401).json({ message: 'Phiên làm việc hết hạn. Vui lòng đăng nhập lại.' });
+    }
+};
+
 // --- API System Settings ---
 app.get('/api/settings', async (req, res) => {
     try {
@@ -52,22 +68,6 @@ app.put('/api/settings/:id', verifyToken, async (req, res) => {
     }
 });
 
-// Middleware xác thực Token
-const verifyToken = (req, res, next) => {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-    
-    if (!token) return res.status(403).json({ message: 'Không có token truy cập.' });
-
-    try {
-        const decoded = jwt.verify(token, JWT_SECRET);
-        req.user = decoded;
-        next();
-    } catch (err) {
-        return res.status(401).json({ message: 'Phiên làm việc hết hạn. Vui lòng đăng nhập lại.' });
-    }
-};
-
 // --- API Auth ---
 app.post('/api/login', async (req, res) => {
     try {
@@ -88,7 +88,7 @@ app.post('/api/login', async (req, res) => {
         }
 
         if (isMatch) {
-            const token = jwt.sign({ id: user.id, username: user.username, role: user.role }, JWT_SECRET, { expiresIn: '2h' });
+            const token = jwt.sign({ id: user.id, username: user.username, role: user.role }, JWT_SECRET, { expiresIn: '24h' });
             res.json({ token, user: { id: user.id, username: user.username, name: user.name, role: user.role } });
         } else {
             res.status(401).json({ message: 'Mật khẩu không chính xác.' });
