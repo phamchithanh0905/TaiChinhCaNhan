@@ -39,13 +39,18 @@ document.addEventListener("DOMContentLoaded", () => {
     };
     const fetchAllData = async () => {
         try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s timeout
+
             const [usersRes, loansRes, settingsRes, notifRes] = await Promise.all([
-                fetch(`${Config.BASE_URL}/api/users`, { headers }),
-                fetch(`${Config.BASE_URL}/api/loans`, { headers }),
-                fetch(`${Config.BASE_URL}/api/settings`, { headers }),
-                fetch(`${Config.BASE_URL}/api/notifications`, { headers })
+                fetch(`${Config.BASE_URL}/api/users`, { headers, signal: controller.signal }),
+                fetch(`${Config.BASE_URL}/api/loans`, { headers, signal: controller.signal }),
+                fetch(`${Config.BASE_URL}/api/settings`, { headers, signal: controller.signal }),
+                fetch(`${Config.BASE_URL}/api/notifications`, { headers, signal: controller.signal })
             ]);
             
+            clearTimeout(timeoutId);
+
             if (usersRes.status === 401) {
                 localStorage.removeItem('token');
                 localStorage.removeItem('currentUser');
@@ -58,21 +63,28 @@ document.addEventListener("DOMContentLoaded", () => {
             
             refreshUI();
 
-            // Tải riêng Settings
             if (settingsRes.ok) renderSettings(await settingsRes.json());
-            
-            // Tải riêng Notifications
             if (notifRes.ok) renderNotifHistory(await notifRes.json());
                 
         } catch (err) {
-            console.error('Error fetching data', err);
-            Toast.error('Lỗi kết nối Server Admin! Vui lòng thử lại.');
+            console.error('Admin fetching error, retrying...', err);
+            if (err.name === 'AbortError') {
+                Toast.error('Server đang khởi động (Render Cold Start), vui lòng chờ 30-60s...');
+            } else {
+                Toast.error('Lỗi kết nối Server Admin! Đang thử lại...');
+            }
+            setTimeout(fetchAllData, 5000);
         }
     };
 
     const renderNotifHistory = (notifs) => {
         const container = document.getElementById('notifHistoryList');
         if (!container) return;
+        
+        if (!Array.isArray(notifs)) {
+            container.innerHTML = '<p style="color:var(--text-secondary)">Lỗi nạp dữ liệu thông báo.</p>';
+            return;
+        }
         
         container.innerHTML = notifs.map(n => `
             <div style="padding: 1rem; border-bottom: 1px solid var(--border-color); position:relative;">
@@ -115,10 +127,15 @@ document.addEventListener("DOMContentLoaded", () => {
         const container = document.getElementById('settingsList');
         if (!container) return;
         
+        if (!Array.isArray(settings)) {
+            container.innerHTML = '<p style="color:var(--text-secondary)">Lỗi nạp dữ liệu cài đặt.</p>';
+            return;
+        }
+
         container.innerHTML = settings.map(s => `
             <div style="display:flex; justify-content: space-between; align-items: center; padding: 1rem; border-bottom: 1px solid var(--border-color);">
                 <div>
-                    <strong style="display:block;">${s.name}</strong>
+                    <strong style="display:block;">${s.name || 'Gói Vay'}</strong>
                     <small style="color: var(--text-secondary)">Lãi suất: ${s.value_int}%/tháng</small>
                 </div>
                 <div class="form-check form-switch">
@@ -153,18 +170,20 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     const renderDashboardStats = () => {
-        document.getElementById('totalUsersStat').textContent = users.length;
+        document.getElementById('totalUsersStat').textContent = Array.isArray(users) ? users.length : 0;
         
         const statusCounts = { active: 0, pending: 0, rejected: 0, paid: 0 };
         let totalDebtAmt = 0;
 
-        loans.forEach(loan => {
-            statusCounts[loan.status]++;
-            if (loan.status === 'active') {
-                const summary = calculateLoanSummary(loan.amount, loan.interestRate, loan.durationMonths);
-                totalDebtAmt += (summary.totalPayable - (loan.amountPaid || 0));
-            }
-        });
+        if (Array.isArray(loans)) {
+            loans.forEach(loan => {
+                statusCounts[loan.status]++;
+                if (loan.status === 'active') {
+                    const summary = calculateLoanSummary(loan.amount, loan.interestRate, loan.durationMonths);
+                    totalDebtAmt += (summary.totalPayable - (loan.amountPaid || 0));
+                }
+            });
+        }
 
         document.getElementById('pendingLoansStat').textContent = statusCounts.pending;
         document.getElementById('totalDebtStat').textContent = formatCurrency(totalDebtAmt);
@@ -223,6 +242,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const renderAllLoans = () => {
         const tb = document.getElementById('allLoansTableBody');
+        if (!Array.isArray(loans)) {
+            tb.innerHTML = '<tr><td colspan="7" style="text-align: center;">Lỗi nạp dữ liệu khoản vay.</td></tr>';
+            return;
+        }
+
         tb.innerHTML = loans.map(loan => {
             let actionBtn = '';
             // Admin can process pending or close active
@@ -254,6 +278,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const renderUsers = () => {
         const tb = document.getElementById('usersTableBody');
+        if (!Array.isArray(users)) {
+            tb.innerHTML = '<tr><td colspan="5" style="text-align: center;">Lỗi nạp dữ liệu người dùng.</td></tr>';
+            return;
+        }
+
         tb.innerHTML = users.map(u => `
             <tr>
                 <td>${u.id}</td>
@@ -440,7 +469,8 @@ document.addEventListener("DOMContentLoaded", () => {
     // Init
     fetchAllData();
     // Kích hoạt view mặc định (Tổng quan) ngay lập tức
-    setTimeout(() => {
-        document.querySelector('.nav-links li.active')?.click();
-    }, 500);
+    const defaultView = document.querySelector('.nav-links li.active');
+    if (defaultView) {
+        setTimeout(() => defaultView.click(), 100);
+    }
 });

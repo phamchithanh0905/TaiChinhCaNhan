@@ -51,30 +51,42 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const fetchAllData = async () => {
         try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s timeout (Render cold start)
+
             const [loansRes, settingsRes, notifRes, profileRes] = await Promise.all([
-                fetch(`${Config.BASE_URL}/api/loans?customerId=${currentUser.id}`, { headers }),
-                fetch(`${Config.BASE_URL}/api/settings`, { headers }),
-                fetch(`${Config.BASE_URL}/api/notifications`, { headers }),
-                fetch(`${Config.BASE_URL}/api/profile`, { headers })
+                fetch(`${Config.BASE_URL}/api/loans?customerId=${currentUser.id}`, { headers, signal: controller.signal }),
+                fetch(`${Config.BASE_URL}/api/settings`, { headers, signal: controller.signal }),
+                fetch(`${Config.BASE_URL}/api/notifications`, { headers, signal: controller.signal }),
+                fetch(`${Config.BASE_URL}/api/profile`, { headers, signal: controller.signal })
             ]);
+
+            clearTimeout(timeoutId);
+            
             if (loansRes.status === 401 || profileRes.status === 401) {
                 localStorage.removeItem('token');
                 localStorage.removeItem('currentUser');
                 window.location.href = 'login.html?session=expired';
                 return;
             }
+
             loans = await loansRes.json();
-            const settings = await settingsRes.json();
-            const notifs = await notifRes.json();
+            updateDurationOptions(await settingsRes.json());
+            renderNotifications(await notifRes.json());
             userProfile = await profileRes.json();
             
-            updateDurationOptions(settings);
-            renderNotifications(notifs);
             renderProfile();
             refreshUI();
+            console.log("Diagnostic: Data loaded successfully!");
+            document.body.style.opacity = '1'; // Ensure visible after data load
         } catch (err) {
-            console.error('Error fetching data', err);
-            Toast.error('Lỗi nạp dữ liệu từ Server! Vui lòng thử lại.');
+            console.error('Error fetching data, retrying in 5s...', err);
+            if (err.name === 'AbortError') {
+                Toast.error('Hệ thống đang khởi động (Render Cold Start), vui lòng chờ 30-60s...');
+            } else {
+                Toast.error('Lỗi kết nối Server! Đang thử lại...');
+            }
+            setTimeout(fetchAllData, 5000); // Retry
         }
     };
 
@@ -202,11 +214,13 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!rateSelect) return;
 
         let options = '';
-        settings.forEach(s => {
-            if (s.is_active) {
-                options += `<option value="${s.value_int}">${s.value_int}% / Tháng</option>`;
-            }
-        });
+        if (Array.isArray(settings)) {
+            settings.forEach(s => {
+                if (s.is_active) {
+                    options += `<option value="${s.value_int}">${s.value_int}% / Tháng</option>`;
+                }
+            });
+        }
 
         if (options === '') {
             options = '<option value="">Hiện tại không có mức lãi khả dụng</option>';
@@ -597,7 +611,8 @@ await fetch(`${Config.BASE_URL}/api/loans/cancel/${id}`, { method: 'DELETE', hea
 
     fetchAllData();
     // Kích hoạt view mặc định (Tổng quan) ngay lập tức
-    setTimeout(() => {
-        document.querySelector('.nav-links li.active')?.click();
-    }, 500);
+    const defaultView = document.querySelector('.nav-links li.active');
+    if (defaultView) {
+        setTimeout(() => defaultView.click(), 100);
+    }
 });
