@@ -42,21 +42,31 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const fetchAllData = async () => {
         try {
-            const [usersRes, loansRes, settingsRes] = await Promise.all([
+            // Tải dữ liệu chính (Users và Loans)
+            const [usersRes, loansRes] = await Promise.all([
                 fetch(`${Config.BASE_URL}/api/users`, { headers }),
-                fetch(`${Config.BASE_URL}/api/loans`, { headers }),
-                fetch(`${Config.BASE_URL}/api/settings`, { headers })
+                fetch(`${Config.BASE_URL}/api/loans`, { headers })
             ]);
             
-            users = await usersRes.json();
-            loans = await loansRes.json();
-            const settings = await settingsRes.json();
+            if (usersRes.ok) users = await usersRes.json();
+            if (loansRes.ok) loans = await loansRes.json();
             
             refreshUI();
-            renderSettings(settings);
+
+            // Tải riêng Settings để không làm treo trang nếu chưa có bảng
+            fetch(`${Config.BASE_URL}/api/settings`, { headers })
+                .then(res => res.ok ? res.json() : [])
+                .then(settings => {
+                    renderSettings(settings);
+                })
+                .catch(err => {
+                    console.warn('Cài đặt chưa sẵn sàng:', err);
+                    const container = document.getElementById('settingsList');
+                    if(container) container.innerHTML = '<div style="color:var(--danger-color); padding:1rem;">Vui lòng nạp SQL khởi tạo bảng SystemSettings trong Supabase.</div>';
+                });
+                
         } catch (err) {
             console.error('Error fetching data', err);
-            // alert('Không thể kết nối đến máy chủ.');
         }
     };
 
