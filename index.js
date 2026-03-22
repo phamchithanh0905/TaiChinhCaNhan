@@ -59,6 +59,13 @@ pool.connect(async (err) => {
                 console.log('Đã bổ sung cột value_text thành công.');
             } catch (e) { /* Bỏ qua nếu đã có */ }
 
+            try {
+                // 3. Thêm ràng buộc UNIQUE cho cột 'key' để lệnh ON CONFLICT hoạt động
+                await pool.query("ALTER TABLE SystemSettings ADD CONSTRAINT systemsettings_key_unique UNIQUE (\"key\")");
+                console.log('Đã thêm ràng buộc UNIQUE thành công.');
+            } catch (e) { /* Đã có ràng buộc, bỏ qua */ }
+
+
             const rates = [5, 6, 8, 10, 15, 17, 20];
             for (const r of rates) {
                 await pool.query(
