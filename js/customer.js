@@ -254,15 +254,62 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        tb.innerHTML = savings.map(s => `
-            <tr>
-                <td>${new Date(s.createdAt).toLocaleDateString('vi-VN')}</td>
-                <td><strong>${formatCurrency(s.amount)}</strong></td>
-                <td><span class="badge badge-active">${s.rate}%</span></td>
-                <td>${s.term_months} Tháng</td>
-                <td>${getStatusBadge(s.status)}</td>
-            </tr>
-        `).join('');
+        tb.innerHTML = savings.map(s => {
+            let actionBtn = '';
+            if (s.status === 'approved') {
+                actionBtn = `<button class="btn btn-primary btn-sm btn-deposit-savings" data-id="${s.id}"><i class="fas fa-wallet"></i> Nạp Tiền</button>`;
+            } else if (s.status === 'active') {
+                actionBtn = '<span style="color:var(--success-color); font-weight:700;"><i class="fas fa-chart-line"></i> Đang sinh lãi</span>';
+            } else {
+                actionBtn = '<span class="text-secondary">-</span>';
+            }
+
+            return `
+                <tr>
+                    <td>${new Date(s.createdAt).toLocaleDateString('vi-VN')}</td>
+                    <td><strong>${formatCurrency(s.amount)}</strong></td>
+                    <td><span class="badge badge-active">${s.rate}%</span></td>
+                    <td>${s.term_months} Tháng</td>
+                    <td>${getStatusBadge(s.status)}</td>
+                    <td>${actionBtn}</td>
+                </tr>
+            `;
+        }).join('');
+    };
+
+    // Event Delegation for Savings Table Actions
+    document.getElementById('savingsTableBody')?.addEventListener('click', (e) => {
+        const btn = e.target.closest('.btn-deposit-savings');
+        if (btn) openSavingsDepositModal(btn.dataset.id);
+    });
+
+    const openSavingsDepositModal = (id) => {
+        const s = savings.find(item => item.id == id);
+        if(!s) return;
+
+        document.getElementById('depositSavingsId').textContent = 'TK' + s.id;
+        document.getElementById('depositAmount').textContent = formatCurrency(s.amount);
+        document.getElementById('depositRate').textContent = s.rate + '% / Năm';
+        
+        const bName = systemSettings.find(st => st.key === 'bank_name')?.value_text || 'MBBank';
+        const bAcc = systemSettings.find(st => st.key === 'bank_account')?.value_text || '0888101901';
+        const bHolder = systemSettings.find(st => st.key === 'bank_holder')?.value_text || 'PHAM CHI THANH';
+        const note = `Nap tiet kiem TK${s.id}`;
+
+        document.getElementById('sBankName').textContent = bName;
+        document.getElementById('sBankAccount').textContent = bAcc;
+        document.getElementById('sBankHolder').textContent = bHolder;
+        document.getElementById('sTransferNote').textContent = note;
+
+        const qrImg = document.getElementById('savingsQR');
+        if (qrImg) {
+            qrImg.src = `https://img.vietqr.io/image/${bName}-${bAcc}-compact.jpg?amount=${s.amount}&addInfo=${encodeURIComponent(note)}&accountName=${encodeURIComponent(bHolder)}`;
+        }
+
+        const modal = document.getElementById('savingsDepositModal');
+        modal.classList.add('active');
+        
+        modal.querySelector('.close-btn').onclick = () => modal.classList.remove('active');
     };
     const renderDashboardStats = () => {
         let totalDebt = 0;

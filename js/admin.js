@@ -692,6 +692,25 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById('savingsModalRate').textContent = item.rate + '% / Năm';
         document.getElementById('savingsModalNote').value = item.adminNote || '';
 
+        // Dynamic buttons based on status
+        const btnApprove = document.getElementById('btnApproveSavings');
+        const btnReject = document.getElementById('btnRejectSavings');
+        
+        if (item.status === 'pending') {
+            btnApprove.innerHTML = '<i class="fas fa-check"></i> Chấp Thuận Yêu Cầu';
+            btnApprove.className = 'btn btn-primary';
+            btnApprove.style.display = 'block';
+            btnReject.style.display = 'block';
+        } else if (item.status === 'approved') {
+            btnApprove.innerHTML = '<i class="fas fa-hand-holding-usd"></i> Xác Nhận Đã Nhận Tiền';
+            btnApprove.className = 'btn btn-success';
+            btnApprove.style.display = 'block';
+            btnReject.style.display = 'none';
+        } else {
+            btnApprove.style.display = 'none';
+            btnReject.style.display = 'none';
+        }
+
         savingsModal.classList.add('active');
     };
 
@@ -724,7 +743,14 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     };
 
-    document.getElementById('btnApproveSavings')?.addEventListener('click', () => updateSavingsStatus('approved'));
+    document.getElementById('btnApproveSavings')?.addEventListener('click', () => {
+        const item = savings.find(s => s.id == currentActionSavingsId);
+        if (item && item.status === 'pending') {
+            updateSavingsStatus('approved');
+        } else {
+            updateSavingsStatus('active');
+        }
+    });
     document.getElementById('btnRejectSavings')?.addEventListener('click', () => updateSavingsStatus('rejected'));
 
     // Init
