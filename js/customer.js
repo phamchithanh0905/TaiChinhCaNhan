@@ -43,7 +43,7 @@ document.addEventListener("DOMContentLoaded", () => {
             case 'approved': return '<span class="badge badge-active">Chờ nạp tiền</span>';
             case 'verifying': return '<span class="badge" style="background:#f39c12; color:white; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem;">Đang xác minh</span>';
             case 'transferring': return '<span class="badge" style="background:#3498db; color:white; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem;">Đang chuyển tiền</span>';
-            case 'active': return '<span class="badge badge-paid">Đang sinh lãi</span>';
+            case 'active': return '<span class="badge badge-paid">Đang hoạt động</span>';
             case 'paid': return '<span class="badge badge-paid">Đã tất toán</span>';
             case 'rejected': return '<span class="badge badge-rejected">Đã hủy</span>';
             default: return status;
@@ -278,7 +278,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             return `
-                <div class="savings-card glass-panel" style="padding: 1.5rem; margin-bottom: 1.5rem; border-left: 5px solid ${s.status === 'active' ? 'var(--success-color)' : (s.status === 'transferring' ? '#3498db' : 'var(--border-color)')}">
+                <div class="savings-card glass-panel" style="padding: 1.5rem; margin-bottom: 1.5rem; border-left: 5px solid ${s.status === 'active' || s.status === 'paid' ? 'var(--success-color)' : (s.status === 'transferring' ? '#3498db' : 'var(--border-color)')}">
                     <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
                         <div>
                             <span style="font-size: 0.8rem; color: var(--text-secondary);">Mã: #TK${s.id}</span>
