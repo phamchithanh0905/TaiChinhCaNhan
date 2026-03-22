@@ -523,14 +523,14 @@ document.addEventListener("DOMContentLoaded", () => {
         if (amt >= 1000000 && !isNaN(interest)) {
             const summary = calculateLoanSummary(amt, interest, months);
             estimateDisplay.innerHTML = `
-                <div style="display:flex; justify-content: space-between; margin-bottom: 5px;">
-                    <span>Tổng lãi dự kiến:</span> <strong>${formatCurrency(summary.totalInterest)}</strong>
+                <div style="display:flex; justify-content: space-between; color: var(--danger-color); font-weight:700; margin-bottom: 8px; font-size: 1.1rem;">
+                    <span>Trả góp hàng tháng:</span> <strong>${formatCurrency(Math.round(summary.totalPayable / months))}</strong>
                 </div>
                 <div style="display:flex; justify-content: space-between; margin-bottom: 5px;">
-                    <span>Tổng Gốc + Lãi phải trả:</span> <strong>${formatCurrency(summary.totalPayable)}</strong>
+                    <span>Tổng tiền dự kiến tất toán:</span> <strong>${formatCurrency(summary.totalPayable)}</strong>
                 </div>
-                <div style="display:flex; justify-content: space-between; color: var(--danger-color); font-weight:700;">
-                    <span>Trả góp mỗi tháng:</span> <strong>${formatCurrency(Math.round(summary.totalPayable / months))} đ</strong>
+                <div style="display:flex; justify-content: space-between;">
+                    <span>Lãi phải trả:</span> <strong>${formatCurrency(summary.totalInterest)}</strong>
                 </div>
             `;
         } else {
