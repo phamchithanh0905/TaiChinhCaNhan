@@ -41,8 +41,9 @@ document.addEventListener("DOMContentLoaded", () => {
         switch (status) {
             case 'pending': return '<span class="badge badge-pending">Đang xử lý</span>';
             case 'approved': return '<span class="badge badge-active">Chờ nạp tiền</span>';
-            case 'verifying': return '<span class="badge badge-pending" style="background:#f39c12; color:white;">Đang xác minh tiền</span>';
-            case 'active': return '<span class="badge badge-paid">Đang hoạt động</span>';
+            case 'verifying': return '<span class="badge" style="background:#f39c12; color:white; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem;">Đang xác minh</span>';
+            case 'transferring': return '<span class="badge" style="background:#3498db; color:white; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem;">Đang chuyển tiền</span>';
+            case 'active': return '<span class="badge badge-paid">Đang sinh lãi</span>';
             case 'paid': return '<span class="badge badge-paid">Đã tất toán</span>';
             case 'rejected': return '<span class="badge badge-rejected">Đã hủy</span>';
             default: return status;
@@ -251,31 +252,33 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!tb) return;
 
         if (savings.length === 0) {
-            tb.innerHTML = '<tr><td colspan="5" style="text-align: center;">Bạn chưa có khoản tiết kiệm nào.</td></tr>';
+            tb.innerHTML = '<tr><td colspan="7" style="text-align: center;">Bạn chưa có khoản tiết kiệm nào.</td></tr>';
             return;
         }
 
         tb.innerHTML = savings.map(s => {
-            let actionBtn = '';
+            const startDate = new Date(s.createdAt);
+            const maturityDate = new Date(startDate);
+            maturityDate.setMonth(maturityDate.getMonth() + parseInt(s.term_months));
+
+            let actionBtn = '-';
             if (s.status === 'approved') {
-                actionBtn = `<button class="btn btn-primary btn-sm btn-deposit-savings" data-id="${s.id}"><i class="fas fa-wallet"></i> Nạp Tiền</button>`;
-            } else if (s.status === 'active') {
-                actionBtn = '<span style="color:var(--success-color); font-weight:700;"><i class="fas fa-chart-line"></i> Đang sinh lãi</span>';
-            } else {
-                actionBtn = '<span class="text-secondary">-</span>';
+                actionBtn = `<button class="btn btn-primary btn-sm btn-deposit-savings" data-id="${s.id}">Nạp Tiền</button>`;
+            } else if (s.status === 'transferring') {
+                actionBtn = `<button class="btn btn-success btn-sm btn-confirm-received" data-id="${s.id}" style="background:#27ae60; color:white;">Xác nhận nhận tiền</button>`;
             }
 
             return `
-                <tr>
-                    <td>${new Date(s.createdAt).toLocaleDateString('vi-VN')}</td>
-                    <td><strong>${formatCurrency(s.amount)}</strong></td>
-                    <td><span class="badge badge-active">${s.rate}%</span></td>
-                    <td>${s.term_months} Tháng</td>
-                    <td>${getStatusBadge(s.status)}</td>
-                    <td>${actionBtn}</td>
-                </tr>
-            `;
-        }).join('');
+            <tr>
+                <td style="padding: 1.2rem 0.5rem;">${startDate.toLocaleDateString('vi-VN')}</td>
+                <td style="padding: 1.2rem 0.5rem;">${maturityDate.toLocaleDateString('vi-VN')}</td>
+                <td style="padding: 1.2rem 0.5rem;"><strong>${formatCurrency(s.amount)}</strong></td>
+                <td style="padding: 1.2rem 0.5rem;"><span style="color:var(--success-color); font-weight:700;">${s.rate}%</span></td>
+                <td style="padding: 1.2rem 0.5rem;">${s.term_months} Tháng</td>
+                <td style="padding: 1.2rem 0.5rem;">${getStatusBadge(s.status)}</td>
+                <td style="padding: 1.2rem 0.5rem;">${actionBtn}</td>
+            </tr>
+        `}).join('');
     };
 
     // Event Delegation for Savings Table Actions

@@ -34,6 +34,7 @@ document.addEventListener("DOMContentLoaded", () => {
             'approved': '<span class="badge badge-pending" style="background:#5a189a; color:white;">Chờ nạp tiền</span>',
             'verifying': '<span class="badge" style="background:#f39c12; color:white; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem;">Đang xác minh tiền</span>',
             'active': '<span class="badge badge-paid">Đang hoạt động</span>',
+            'transferring': '<span class="badge" style="background:#3498db; color:white; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem;">Đang chuyển tiền</span>',
             'rejected': '<span class="badge badge-rejected">Đã hủy</span>',
             'paid': '<span class="badge badge-paid">Đã tất toán</span>'
         };
@@ -685,10 +686,16 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        tb.innerHTML = savings.map(s => `
+        tb.innerHTML = savings.map(s => {
+            const startDate = new Date(s.createdAt);
+            const maturityDate = new Date(startDate);
+            maturityDate.setMonth(maturityDate.getMonth() + parseInt(s.term_months));
+
+            return `
             <tr>
                 <td style="padding: 1.2rem 0.5rem;">#${s.id}</td>
-                <td style="padding: 1.2rem 0.5rem;">${new Date(s.createdAt).toLocaleDateString('vi-VN')}</td>
+                <td style="padding: 1.2rem 0.5rem;">${startDate.toLocaleDateString('vi-VN')}</td>
+                <td style="padding: 1.2rem 0.5rem;">${maturityDate.toLocaleDateString('vi-VN')}</td>
                 <td style="padding: 1.2rem 0.5rem;"><strong>${s.customerName || 'N/A'}</strong></td>
                 <td style="padding: 1.2rem 0.5rem;">${formatCurrency(s.amount)}</td>
                 <td style="padding: 1.2rem 0.5rem;"><span style="color:var(--success-color); font-weight:700;">${s.rate}%</span></td>
@@ -700,7 +707,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     </button>
                 </td>
             </tr>
-        `).join('');
+        `}).join('');
     };
 
     let currentActionSavingsId = null;
@@ -739,15 +746,20 @@ document.addEventListener("DOMContentLoaded", () => {
             btnApprove.style.display = 'block';
             btnReject.style.display = 'block';
         } else if (item.status === 'verifying') {
-            btnApprove.innerHTML = '<i class="fas fa-hand-holding-usd"></i> Xác Nhận Đã Nhận Tiền';
+            btnApprove.innerHTML = '<i class="fas fa-money-bill-wave"></i> Xác Nhận Đã Nhận Tiền';
             btnApprove.className = 'btn btn-success';
             btnApprove.style.display = 'block';
             btnReject.style.display = 'block';
         } else if (item.status === 'approved') {
-            btnApprove.innerHTML = '<i class="fas fa-check-double"></i> Kích Hoạt Thủ Công';
+            btnApprove.innerHTML = '<i class="fas fa-play"></i> Kích Hoạt Thủ Công';
             btnApprove.className = 'btn btn-secondary';
             btnApprove.style.display = 'block';
             btnReject.style.display = 'block';
+        } else if (item.status === 'active') {
+            btnApprove.innerHTML = '<i class="fas fa-paper-plane"></i> Chuyển Tiền Cho Khách';
+            btnApprove.className = 'btn btn-primary'; // Assuming primary for payout action
+            btnApprove.style.display = 'block';
+            btnReject.style.display = 'none';
         } else {
             btnApprove.style.display = 'none';
             btnReject.style.display = 'none';
@@ -788,11 +800,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document.getElementById('btnApproveSavings')?.addEventListener('click', () => {
         const item = savings.find(s => s.id == currentActionSavingsId);
-        if (item && item.status === 'pending') {
+        if (!item) return;
+
+        if (item.status === 'pending') {
             updateSavingsStatus('approved');
-        } else {
-            // Cho cả status 'verifying' và 'approved' (kích hoạt thủ công)
+        } else if (item.status === 'verifying' || item.status === 'approved') {
             updateSavingsStatus('active');
+        } else if (item.status === 'active') {
+            // Admin bấm chuyển tiền cho khách
+            updateSavingsStatus('transferring');
         }
     });
     document.getElementById('btnRejectSavings')?.addEventListener('click', () => updateSavingsStatus('rejected'));
