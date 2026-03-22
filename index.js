@@ -552,10 +552,12 @@ app.put('/api/savings/:id', verifyToken, async (req, res) => {
             return res.json({ message: 'Cập nhật thành công.' });
         }
 
-        // Nếu là khách: chỉ được đổi sang 'verifying' nếu của chính mình
-        if (String(check.rows[0].customerId) === String(req.user.id) && status === 'verifying') {
-            await pool.query('UPDATE Savings SET status = \'verifying\' WHERE id = $1', [id]);
-            return res.json({ message: 'Đã báo nạp tiền thành công.' });
+        // Nếu là khách: được đổi sang 'verifying' hoặc 'paid' nếu của chính mình
+        if (String(check.rows[0].customerId) === String(req.user.id)) {
+            if (status === 'verifying' || status === 'paid') {
+                await pool.query('UPDATE Savings SET status = $1 WHERE id = $2', [status, id]);
+                return res.json({ message: 'Cập nhật thành công.' });
+            }
         }
 
         return res.status(403).json({ message: 'Không có quyền.' });
