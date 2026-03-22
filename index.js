@@ -57,7 +57,7 @@ pool.connect(async (err) => {
                     "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             `);
-            const rates = [5, 6, 8, 10, 15, 17, 20];
+            const rates = [5, 6, 8, 10, 15, 17, 20, 22];
             for (const r of rates) {
                 await pool.query(
                     'INSERT INTO SystemSettings ("key", value_int, is_active) VALUES ($1, $2, TRUE) ON CONFLICT ("key") DO NOTHING',
