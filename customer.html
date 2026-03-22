@@ -261,7 +261,7 @@
                             <div class="row">
                                 <div class="col-md-6 form-group">
                                     <label class="form-label">Kỳ Hạn Vay (Tháng)</label>
-                                    <select class="form-control" name="durationMonths" required>
+                                    <select class="form-control" name="durationMonths" required title="Chọn thời hạn vay" aria-label="Chọn thời hạn vay">
                                         <option value="1">1 Tháng</option>
                                         <option value="3">3 Tháng</option>
                                         <option value="6">6 Tháng</option>
@@ -272,7 +272,7 @@
                                 </div>
                                 <div class="col-md-6 form-group">
                                     <label class="form-label">Tỷ Lệ Lãi Suất (%)</label>
-                                    <select class="form-control" name="interestRate" required id="interestRateSelect">
+                                    <select class="form-control" name="interestRate" required id="interestRateSelect" title="Chọn lãi suất" aria-label="Chọn lãi suất">
                                         <!-- Populated from Admin Settings -->
                                         <option value="10">10% / Tháng</option>
                                         <option value="15">15% / Tháng</option>
@@ -304,7 +304,7 @@
         <div class="modal-content glass-panel">
             <div class="modal-header">
                 <h2>Thanh Toán Khoản Vay <span id="payLoanId"></span></h2>
-                <button class="close-btn"><i class="fas fa-times"></i></button>
+                <button class="close-btn" title="Đóng" aria-label="Đóng"><i class="fas fa-times"></i></button>
             </div>
             <div class="modal-body">
                 <p>Tổng nợ gốc: <strong id="payTotalAmount"></strong></p>
@@ -356,7 +356,7 @@
         <div class="modal-content glass-panel" style="max-width: 600px;">
             <div class="modal-header">
                 <h2>Lịch Trả Nợ Khoản Vay <span id="scheduleLoanId"></span></h2>
-                <button class="close-btn"><i class="fas fa-times"></i></button>
+                <button class="close-btn" title="Đóng" aria-label="Đóng"><i class="fas fa-times"></i></button>
             </div>
             <div class="modal-body">
                 <div class="table-responsive">

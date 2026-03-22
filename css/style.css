@@ -81,8 +81,8 @@ a:hover {
 /* Glass Surface Utility */
 .glass-panel {
   background: var(--glass-bg);
-  backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
   border: 1px solid var(--glass-border);
   box-shadow: var(--glass-shadow);
   border-radius: var(--border-radius-md);
@@ -342,6 +342,7 @@ a:hover {
 .navbar {
   height: var(--header-height);
   background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--border-color);
   display: flex;
