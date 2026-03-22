@@ -311,22 +311,46 @@ app.delete('/api/loans/:id', verifyToken, async (req, res) => {
 });
 
 app.put('/api/loans/:id', verifyToken, async (req, res) => {
-    if (req.user.role !== 'admin') return res.status(403).json({ message: 'Admin only' });
     try {
         const id = req.params.id;
         const { status, adminNote, startDate, amountPaid, nextPaymentDate } = req.body;
-        let query = 'UPDATE Loans SET ';
+        
+        // Lấy thông tin hiện tại của khoản vay
+        const curRes = await pool.query('SELECT * FROM Loans WHERE id = $1', [id]);
+        if (curRes.rows.length === 0) return res.status(404).json({ message: 'Không tìm thấy khoản vay.' });
+        const curLoan = curRes.rows[0];
+
+        let updates = {};
+        if (req.user.role === 'admin') {
+            updates = { status, adminNote, startDate, amountPaid, nextPaymentDate };
+        } else {
+            if (String(curLoan.customerId) !== String(req.user.id)) return res.status(403).json({ message: 'Không có quyền.' });
+            updates.adminNote = adminNote || curLoan.adminNote;
+            if (amountPaid !== undefined) {
+                updates.amountPaid = amountPaid;
+                if (amountPaid > (curLoan.amountPaid || 0)) {
+                   const oldDate = curLoan.nextPaymentDate ? new Date(curLoan.nextPaymentDate) : new Date();
+                   oldDate.setDate(oldDate.getDate() + 30);
+                   updates.nextPaymentDate = oldDate.toISOString();
+                }
+            }
+        }
+
         const setClauses = [];
         const params = [];
         let count = 1;
-        if (status) { setClauses.push(`status = $${count++}`); params.push(status); }
-        if (adminNote !== undefined) { setClauses.push(`"adminNote" = $${count++}`); params.push(adminNote); }
-        if (startDate) { setClauses.push(`"startDate" = $${count++}`); params.push(startDate); }
-        if (amountPaid !== undefined) { setClauses.push(`"amountPaid" = $${count++}`); params.push(amountPaid); }
-        if (nextPaymentDate) { setClauses.push(`"nextPaymentDate" = $${count++}`); params.push(nextPaymentDate); }
+        Object.keys(updates).forEach(key => {
+            if (updates[key] !== undefined) {
+                const pgKey = (key === 'amountPaid' || key === 'nextPaymentDate' || key === 'startDate' || key === 'adminNote') 
+                             ? `"${key}"` : key;
+                setClauses.push(`${pgKey} = $${count++}`);
+                params.push(updates[key]);
+            }
+        });
+
         if (setClauses.length === 0) return res.status(400).json({ message: 'No fields to update' });
-        query += setClauses.join(', ') + ` WHERE id = $${count} RETURNING *`;
         params.push(id);
+        const query = `UPDATE Loans SET ${setClauses.join(', ')} WHERE id = $${count} RETURNING *`;
         const result = await pool.query(query, params);
         res.json(result.rows[0]);
     } catch (err) {

@@ -473,19 +473,15 @@ document.addEventListener("DOMContentLoaded", () => {
         const summary = calculateLoanSummary(loan.amount, loan.interestRate, loan.durationMonths);
         const newPaid = (loan.amountPaid || 0) + amountToPay;
         
-        let updateData = { amountPaid: newPaid, status: loan.status };
-        
-        if (newPaid >= summary.totalPayable || (summary.totalPayable - newPaid) < 1000) {
-            updateData.status = 'paid';
-            updateData.amountPaid = summary.totalPayable;
-        } else {
-            // Push date ahead 1 month
-            const npd = new Date(loan.nextPaymentDate || new Date());
-            npd.setMonth(npd.getMonth() + 1);
-            updateData.nextPaymentDate = npd.toISOString();
-        }
+        let updateData = { 
+            amountPaid: newPaid, 
+            status: newPaid >= summary.totalPayable ? 'paid' : loan.status,
+            adminNote: document.getElementById('modalAdminNote')?.value || loan.adminNote
+        };
 
-        updateData.adminNote = document.getElementById('modalAdminNote')?.value || loan.adminNote;
+        if (updateData.status === 'paid') {
+            updateData.amountPaid = summary.totalPayable;
+        }
 
         showLoader();
         try {
