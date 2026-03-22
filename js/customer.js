@@ -248,43 +248,99 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     const renderSavings = () => {
-        const tb = document.getElementById('savingsTableBody');
-        if (!tb) return;
+        const container = document.getElementById('savingsListGrid');
+        if (!container) return;
 
         if (savings.length === 0) {
-            tb.innerHTML = '<tr><td colspan="7" style="text-align: center;">Bạn chưa có khoản tiết kiệm nào.</td></tr>';
+            container.innerHTML = `
+                <div class="text-center p-5" style="width: 100%; color: var(--text-secondary);">
+                    <i class="fas fa-piggy-bank fa-3x mb-3" style="opacity: 0.3"></i>
+                    <p>Bạn chưa có khoản tiết kiệm nào.</p>
+                </div>
+            `;
             return;
         }
 
-        tb.innerHTML = savings.map(s => {
+        container.innerHTML = savings.map(s => {
             const startDate = new Date(s.createdAt);
             const maturityDate = new Date(startDate);
             maturityDate.setMonth(maturityDate.getMonth() + parseInt(s.term_months));
 
-            let actionBtn = '-';
+            // Tính lợi nhuận dự kiến
+            const monthlyRate = s.rate / 100 / 12;
+            const expectedProfit = s.amount * monthlyRate * s.term_months;
+
+            let actionHtml = '';
             if (s.status === 'approved') {
-                actionBtn = `<button class="btn btn-primary btn-sm btn-deposit-savings" data-id="${s.id}">Nạp Tiền</button>`;
+                actionHtml = `<button class="btn btn-primary btn-deposit-savings w-100" data-id="${s.id}" style="margin-top: 1rem; border-radius: 12px; padding: 12px;"><i class="fas fa-wallet"></i> Nạp Tiền Ngay</button>`;
             } else if (s.status === 'transferring') {
-                actionBtn = `<button class="btn btn-success btn-sm btn-confirm-received" data-id="${s.id}" style="background:#27ae60; color:white;">Xác nhận nhận tiền</button>`;
+                actionHtml = `<button class="btn btn-success btn-confirm-received w-100" data-id="${s.id}" style="margin-top: 1rem; border-radius: 12px; padding: 12px; background: #27ae60; animation: pulse 2s infinite;"><i class="fas fa-check-circle"></i> Xác Nhận Đã Nhận Tiền</button>`;
             }
 
             return `
-            <tr>
-                <td style="padding: 1.2rem 0.5rem;">${startDate.toLocaleDateString('vi-VN')}</td>
-                <td style="padding: 1.2rem 0.5rem;">${maturityDate.toLocaleDateString('vi-VN')}</td>
-                <td style="padding: 1.2rem 0.5rem;"><strong>${formatCurrency(s.amount)}</strong></td>
-                <td style="padding: 1.2rem 0.5rem;"><span style="color:var(--success-color); font-weight:700;">${s.rate}%</span></td>
-                <td style="padding: 1.2rem 0.5rem;">${s.term_months} Tháng</td>
-                <td style="padding: 1.2rem 0.5rem;">${getStatusBadge(s.status)}</td>
-                <td style="padding: 1.2rem 0.5rem;">${actionBtn}</td>
-            </tr>
-        `}).join('');
+                <div class="savings-card glass-panel" style="padding: 1.5rem; margin-bottom: 1.5rem; border-left: 5px solid ${s.status === 'active' ? 'var(--success-color)' : (s.status === 'transferring' ? '#3498db' : 'var(--border-color)')}">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+                        <div>
+                            <span style="font-size: 0.8rem; color: var(--text-secondary);">Mã: #TK${s.id}</span>
+                            <h4 style="font-size: 1.5rem; margin: 0.5rem 0; color: var(--success-color);">${formatCurrency(s.amount)}</h4>
+                        </div>
+                        ${getStatusBadge(s.status)}
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 12px;">
+                        <div>
+                            <small style="display: block; color: var(--text-secondary); margin-bottom: 4px;">Lãi suất</small>
+                            <strong style="color: var(--success-color);">${s.rate}%/Năm</strong>
+                        </div>
+                        <div>
+                            <small style="display: block; color: var(--text-secondary); margin-bottom: 4px;">Lợi nhuận dự kiến</small>
+                            <strong style="color: #f1c40f;">+${formatCurrency(expectedProfit)}</strong>
+                        </div>
+                        <div>
+                            <small style="display: block; color: var(--text-secondary); margin-bottom: 4px;">Ngày gửi</small>
+                            <strong>${startDate.toLocaleDateString('vi-VN')}</strong>
+                        </div>
+                        <div>
+                            <small style="display: block; color: var(--text-secondary); margin-bottom: 4px;">Ngày đáo hạn</small>
+                            <strong>${maturityDate.toLocaleDateString('vi-VN')}</strong>
+                        </div>
+                    </div>
+                    
+                    ${actionHtml}
+                </div>
+            `;
+        }).join('');
+
+        // Thêm CSS pulse animation nếu chưa có
+        if (!document.getElementById('savingsCustomStyles')) {
+            const style = document.createElement('style');
+            style.id = 'savingsCustomStyles';
+            style.innerHTML = `
+                @keyframes pulse {
+                    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(39, 174, 96, 0.4); }
+                    70% { transform: scale(1.02); box-shadow: 0 0 0 10px rgba(39, 174, 96, 0); }
+                    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(39, 174, 96, 0); }
+                }
+                .savings-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; }
+                .savings-card { transition: all 0.3s ease; }
+                .savings-card:hover { transform: translateY(-5px); background: rgba(255,255,255,0.1); }
+            `;
+            document.head.appendChild(style);
+        }
     };
 
-    // Event Delegation for Savings Table Actions
-    document.getElementById('savingsTableBody')?.addEventListener('click', (e) => {
-        const btn = e.target.closest('.btn-deposit-savings');
-        if (btn) openSavingsDepositModal(btn.dataset.id);
+    // Event Delegation for Savings grid Actions
+    document.getElementById('savingsListGrid')?.addEventListener('click', (e) => {
+        const btnDeposit = e.target.closest('.btn-deposit-savings');
+        if (btnDeposit) openSavingsDepositModal(btnDeposit.dataset.id);
+
+        const btnConfirm = e.target.closest('.btn-confirm-received');
+        if (btnConfirm) {
+            const id = btnConfirm.dataset.id;
+            if (confirm('Bạn xác nhận đã nhận đủ tiền và lãi từ Admin cho khoản tích lũy này?')) {
+                confirmReceived(id);
+            }
+        }
     });
 
     const openSavingsDepositModal = (id) => {
