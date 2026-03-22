@@ -465,26 +465,34 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById('modalAmount').textContent = formatCurrency(calculateLoanSummary(loan.amount, loan.interestRate, loan.durationMonths).totalPayable) + ' (Tổng Gốc + Lãi)';
         document.getElementById('modalAdminNote').value = loan.adminNote || '';
         
-        const dateGroup = document.getElementById('modalNextDateGroup');
+        const activeFields = document.getElementById('modalActiveFields');
+        const startDateInput = document.getElementById('modalStartDate');
         const nextDateInput = document.getElementById('modalNextDate');
         
         if (loan.status === 'pending') {
             btnApprove.innerHTML = '<i class="fas fa-check"></i> Phê Duyệt Vay';
             btnApprove.style.background = 'var(--primary-color)';
             btnReject.style.display = 'inline-block';
-            dateGroup.style.display = 'none';
+            activeFields.style.display = 'none';
         } else if (loan.status === 'approved') {
             btnApprove.innerHTML = '<i class="fas fa-paper-plane"></i> XÁC NHẬN ĐÃ CHUYỂN TIỀN';
             btnApprove.style.background = 'var(--success-color)';
             btnReject.style.display = 'none';
-            dateGroup.style.display = 'none';
+            activeFields.style.display = 'none';
         } else if (loan.status === 'active') {
             btnApprove.innerHTML = '<i class="fas fa-save"></i> Cập Nhật Hạn & Lưu';
             btnApprove.style.background = 'var(--primary-color)';
             btnReject.innerHTML = '<i class="fas fa-check-double"></i> Xác Nhận Tất Toán Toàn Bộ';
             btnReject.style.background = 'var(--success-color)';
             btnReject.style.display = 'inline-block';
-            dateGroup.style.display = 'block';
+            activeFields.style.display = 'block';
+            
+            if (loan.startDate) {
+                startDateInput.value = new Date(loan.startDate).toISOString().split('T')[0];
+            } else {
+                startDateInput.value = '';
+            }
+
             if (loan.nextPaymentDate) {
                 nextDateInput.value = new Date(loan.nextPaymentDate).toISOString().split('T')[0];
             } else {
@@ -511,6 +519,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById('btnApprove').addEventListener('click', async () => {
         if(!currentActionLoanId) return;
         
+        const startDateVal = document.getElementById('modalStartDate').value;
         const nextDateVal = document.getElementById('modalNextDate').value;
         let updateData = {};
 
@@ -523,8 +532,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 nextPaymentDate: new Date(Date.now() + 30*24*60*60*1000).toISOString()
             };
         } else if (currentLoanStatus === 'active') {
-            // Cập nhật ngày hạn hoặc ghi chú
+            // Cập nhật ngày hạn hoặc ghi chú hoặc ngày bắt đầu
             updateData = { status: 'active' };
+            if (startDateVal) updateData.startDate = new Date(startDateVal).toISOString();
             if (nextDateVal) updateData.nextPaymentDate = new Date(nextDateVal).toISOString();
         }
 

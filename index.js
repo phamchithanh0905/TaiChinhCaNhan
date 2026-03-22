@@ -57,6 +57,17 @@ pool.connect(async (err) => {
                     "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             `);
+            // --- Tự động cập nhật Schema bảng Payments ---
+            try {
+                await pool.query('ALTER TABLE Payments ADD COLUMN IF NOT EXISTS "customerId" VARCHAR(50)');
+                console.log('Đảm bảo bảng Payments có cột customerId.');
+            } catch (e) { /* Đã có hoặc lỗi khác */ }
+
+            try {
+                // Đảm bảo "customerId" cho những thanh toán cũ nếu có
+                await pool.query('UPDATE Payments p SET "customerId" = l."customerId" FROM Loans l WHERE p."loanId" = l.id AND p."customerId" IS NULL');
+            } catch (e) { }
+
             const rates = [5, 6, 8, 10, 15, 17, 20, 22];
             for (const r of rates) {
                 await pool.query(
@@ -414,8 +425,8 @@ app.post('/api/payments', verifyToken, async (req, res) => {
         const customerId = req.user.id; 
         
         await pool.query(
-            'INSERT INTO Payments ("loanId", "customerId", amount) VALUES ($1, $2, $3)',
-            [loanId, customerId, amount]
+            'INSERT INTO Payments ("loanId", "customerId", amount, status) VALUES ($1, $2, $3, \'pending\')',
+            [loanId, req.user.id, amount]
         );
         res.status(201).json({ message: 'Payment request created' });
     } catch (err) {
