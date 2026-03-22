@@ -219,12 +219,12 @@ document.addEventListener("DOMContentLoaded", () => {
         const rateSelect = document.getElementById('interestRateSelect');
         if (!rateSelect) return;
 
-        let options = '';
+        let options = '<option value="" disabled selected>-- Chọn mức lãi suất --</option>';
         if (Array.isArray(settings)) {
-            settings.forEach(s => {
-                if (s.is_active) {
-                    options += `<option value="${s.value_int}">${s.value_int}% / Tháng</option>`;
-                }
+            // Lọc bỏ những giá trị rác hoặc null
+            const validRates = settings.filter(s => s.is_active && s.value_int !== null && s.key.startsWith('rate_'));
+            validRates.forEach(s => {
+                options += `<option value="${s.value_int}">${s.value_int}% / Tháng</option>`;
             });
         }
 
@@ -232,7 +232,7 @@ document.addEventListener("DOMContentLoaded", () => {
             options = '<option value="">Hiện tại không có mức lãi khả dụng</option>';
         }
         rateSelect.innerHTML = options;
-        updateEstimate(); // Trigger re-calc
+        updateEstimate(); 
     };
 
     const refreshUI = () => {
@@ -553,26 +553,46 @@ document.addEventListener("DOMContentLoaded", () => {
         const amountInput = document.getElementById('loanAmountInput');
         const durationInput = document.querySelector('select[name="durationMonths"]');
         const rateSelect = document.querySelector('select[name="interestRate"]');
+        const estimateDisplay = document.getElementById('loanEstimateDisplay');
 
-        if (!amountInput || !rateSelect) return;
+        if (!amountInput || !rateSelect || !estimateDisplay) return;
 
-        // Gỡ bỏ dấu chấm/phẩy để lấy số gốc
-        const rawAmt = amountInput.value.replace(/\./g, "").replace(/,/g, "");
+        const rawAmt = amountInput.value.replace(/\D/g, "");
         const amt = parseFloat(rawAmt);
         const months = parseInt(durationInput.value);
         const interest = parseFloat(rateSelect.value);
 
         if (amt >= 1000000 && !isNaN(interest)) {
             const summary = calculateLoanSummary(amt, interest, months);
+            const principalPerMonth = amt / months;
+            const interestPerMonth = amt * (interest / 100);
+
             estimateDisplay.innerHTML = `
-                <div style="display:flex; justify-content: space-between; color: var(--danger-color); font-weight:700; margin-bottom: 8px; font-size: 1.1rem;">
-                    <span>Trả góp hàng tháng:</span> <strong>${formatCurrency(Math.round(summary.totalPayable / months))}</strong>
+                <div style="margin-bottom: 1.5rem; text-align:center;">
+                    <div style="color: var(--text-secondary); font-size: 0.9rem;">SỐ TIỀN TRẢ GÓP HÀNG THÁNG</div>
+                    <div style="font-size: 2.2rem; font-weight: 800; color: var(--primary-color); text-shadow: 0 0 20px rgba(67, 97, 238, 0.2); line-height:1.2;">
+                        ${formatCurrency(Math.round(summary.monthlyInstallment))}
+                    </div>
+                    <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 5px;">
+                        (Gốc: ${formatCurrency(Math.round(principalPerMonth))} + Lãi: ${formatCurrency(Math.round(interestPerMonth))})
+                    </div>
                 </div>
-                <div style="display:flex; justify-content: space-between; margin-bottom: 5px;">
-                    <span>Tổng tiền dự kiến tất toán:</span> <strong>${formatCurrency(summary.totalPayable)}</strong>
-                </div>
-                <div style="display:flex; justify-content: space-between;">
-                    <span>Lãi phải trả:</span> <strong>${formatCurrency(summary.totalInterest)}</strong>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1);">
+                    <div>
+                        <small style="color: var(--text-secondary);">Tổng nợ gốc</small>
+                        <div style="font-weight: 700;">${formatCurrency(amt)}</div>
+                    </div>
+                    <div>
+                        <small style="color: var(--text-secondary);">Tổng lãi (${months} tháng)</small>
+                        <div style="font-weight: 700; color: var(--danger-color);">${formatCurrency(Math.round(summary.totalInterest))}</div>
+                    </div>
+                    <div style="grid-column: span 2; margin-top: 5px; padding: 0.8rem; background: rgba(255,255,255,0.05); border-radius: 8px;">
+                        <small style="color: var(--text-secondary);">Tổng số tiền dự kiến thanh toán</small>
+                        <div style="font-size: 1.1rem; font-weight: 700; color: var(--success-color);">
+                            ${formatCurrency(Math.round(summary.totalPayable))}
+                        </div>
+                    </div>
                 </div>
             `;
         } else {
