@@ -226,13 +226,24 @@
                     <div class="page-header">
                         <h1>Cài Đặt Hệ Thống</h1>
                     </div>
-                    <div class="glass-panel" style="padding: 2rem; max-width: 600px;">
-                        <h3>Quản lý các gói lãi suất</h3>
-                        <p style="color: var(--text-secondary); margin-bottom: 2rem;">Bật hoặc tắt các gói lãi suất để khách hàng có thể lựa chọn khi đăng ký vay.</p>
-                        
-                        <div id="settingsList" class="settings-list">
-                            <!-- Populated by JS -->
-                            <div class="loader-inner">Đang tải cài đặt...</div>
+                    
+                    <div class="settings-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                        <!-- Left Column: Interest Rates -->
+                        <div class="glass-panel p-2">
+                            <h3 style="color: var(--primary-color); margin-bottom: 0.5rem;"><i class="fas fa-percent"></i> Gói Lãi Suất</h3>
+                            <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 2rem;">Bật/tắt các gói lãi suất khả dụng.</p>
+                            <div id="ratesContainer">
+                                <div class="text-center">Đang tải...</div>
+                            </div>
+                        </div>
+
+                        <!-- Right Column: Banking Info -->
+                        <div class="glass-panel p-2">
+                            <h3 style="color: var(--success-color); margin-bottom: 0.5rem;"><i class="fas fa-university"></i> Thông Tin Ngân Hàng</h3>
+                            <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 2rem;">Thông tin hiển thị cho khách chuyển khoản.</p>
+                            <div id="bankSettingsContainer">
+                                <div class="text-center">Đang tải...</div>
+                            </div>
                         </div>
                     </div>
                 </div>

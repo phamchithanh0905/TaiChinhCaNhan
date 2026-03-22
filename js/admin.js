@@ -135,30 +135,16 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     const renderSettings = (settings) => {
-        const container = document.getElementById('settingsList');
-        if (!container) return;
+        const ratesContainer = document.getElementById('ratesContainer');
+        const bankContainer = document.getElementById('bankSettingsContainer');
+        if (!ratesContainer || !bankContainer) return;
         
         if (!Array.isArray(settings)) {
-            container.innerHTML = '<p style="color:var(--text-secondary)">Lỗi nạp dữ liệu cài đặt.</p>';
+            ratesContainer.innerHTML = '<p style="color:var(--text-secondary)">Lỗi nạp dữ liệu cài đặt.</p>';
             return;
         }
 
-        container.innerHTML = settings.map(s => {
-            const isBankInfo = s.key.startsWith('bank_');
-            let name = s.key;
-            if (s.key === 'bank_name') name = 'Tên Ngân Hàng';
-            if (s.key === 'bank_account') name = 'Số Tài Khoản';
-            if (s.key === 'bank_holder') name = 'Chủ Tài Khoản';
-            
-            if (isBankInfo) {
-                return `
-                <div style="display:flex; flex-direction: column; padding: 1rem; border-bottom: 1px solid var(--border-color);">
-                    <label style="font-weight: bold; margin-bottom: 5px;">${name}</label>
-                    <input type="text" class="form-control bank-setting-input" data-id="${s.id}" value="${s.value_text || ''}" style="background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-color);">
-                </div>`;
-            }
-
-            return `
+        const ratesHtml = settings.filter(s => !s.key.startsWith('bank_')).map(s => `
             <div style="display:flex; justify-content: space-between; align-items: center; padding: 1rem; border-bottom: 1px solid var(--border-color);">
                 <div>
                     <strong style="display:block;">${s.name || `Gói Lãi suất ${s.value_int || 0}%`}</strong>
@@ -167,9 +153,25 @@ document.addEventListener("DOMContentLoaded", () => {
                 <div class="form-check form-switch">
                     <input class="form-check-input setting-toggle" type="checkbox" data-id="${s.id}" ${s.is_active ? 'checked' : ''} style="width: 50px; height: 25px; cursor: pointer;">
                 </div>
-            </div>`;
+            </div>`).join('');
+
+        const bankHtml = settings.filter(s => s.key.startsWith('bank_')).map(s => {
+            let name = s.key;
+            if (s.key === 'bank_name') name = 'Tên Ngân Hàng';
+            if (s.key === 'bank_account') name = 'Số Tài Khoản';
+            if (s.key === 'bank_holder') name = 'Chủ Tài Khoản';
+            
+            return `
+                <div style="display:flex; flex-direction: column; padding: 1rem; border-bottom: 1px solid var(--border-color);">
+                    <label style="font-weight: bold; margin-bottom: 5px;">${name}</label>
+                    <input type="text" class="form-control bank-setting-input" data-id="${s.id}" value="${s.value_text || ''}" style="background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-color);">
+                </div>`;
         }).join('');
 
+        ratesContainer.innerHTML = ratesHtml || '<p class="text-center">Chưa có gói lãi suất.</p>';
+        bankContainer.innerHTML = bankHtml || '<p class="text-center">Chưa cấu hình ngân hàng.</p>';
+
+        // Event Listeners cho Toggles Lãi suất
         document.querySelectorAll('.setting-toggle').forEach(toggle => {
             toggle.addEventListener('change', async (e) => {
                 const id = e.target.dataset.id;
@@ -182,6 +184,7 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         });
 
+        // Event Listeners cho Input Ngân hàng
         document.querySelectorAll('.bank-setting-input').forEach(input => {
             input.addEventListener('blur', async (e) => {
                 const id = e.target.dataset.id;
