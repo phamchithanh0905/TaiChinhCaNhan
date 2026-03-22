@@ -286,3 +286,39 @@
 
 /* Action Buttons in Table */
 .btn-sm { padding: 0.4rem 0.8rem; font-size: 0.8rem; }
+
+/* Utilities to replace inline styles */
+.grid-list { display: grid; gap: 1.5rem; }
+.card-center { padding: 2.5rem; max-width: 800px; margin: 0 auto; }
+.avatar-header { text-align: center; margin-bottom: 2rem; }
+.circle-icon { width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; color: white; font-size: 2.5rem; }
+.info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; background: rgba(0,0,0,0.03); padding: 1.5rem; border-radius: 15px; border: 1px solid var(--border-color); }
+.full-span { grid-column: span 2; }
+.small-label { color: var(--text-secondary); display: block; margin-bottom: 5px; font-weight: 600; text-transform: uppercase; font-size: 0.75rem; }
+.income-val { font-weight: 700; font-size: 1.2rem; color: var(--success-color); }
+.chart-container-inner { height: 300px; width: 100%; display: flex; align-items: center; justify-content: center; }
+.mb-2 { margin-bottom: 2rem; }
+.w-100 { width: 100%; }
+.mt-2 { margin-top: 2rem; }
+.p-2 { padding: 2rem; }
+.fw-600 { font-weight: 600; }
+.fw-700 { font-weight: 700; }
+.text-center { text-align: center; }
+.bank-info-box { background: rgba(0,0,0,0.05); padding: 1.5rem; border-radius: 12px; margin-top: 1.5rem; border: 1px solid var(--border-color); }
+.qr-img { width: 130px; border-radius: 8px; border: 4px solid #fff; }
+.p-1-5 { padding: 1.5rem; }
+.border-primary { border-left: 4px solid var(--primary-color) !important; }
+.border-success { border-left: 4px solid var(--success-color) !important; }
+.border-warning { border-left: 4px solid var(--warning-color) !important; }
+.border-danger { border-left: 4px solid var(--danger-color) !important; }
+.form-scroll { max-height: 450px; overflow-y: auto; padding-right: 5px; }
+.mt-1 { margin-top: 1rem; }
+.mt-1-5 { margin-top: 1.5rem; }
+.fs-085 { font-size: 0.85rem; }
+.m-1-0 { margin: 1rem 0; }
+.p-0-25 { padding: 0.25rem; }
+.flex-1 { flex: 1; }
+.flex-2 { flex: 2; }
+.gap-1-2 { gap: 1.2rem; }
+.p-2-5 { padding: 2.5rem; }
+.span-2 { grid-column: span 2; }

@@ -84,11 +84,11 @@
                     </div>
 
                     <div class="stats-grid" style="grid-template-columns: 1fr 1fr; margin-bottom: 2rem;">
-                        <div class="glass-panel" style="padding: 1.5rem;">
+                        <div class="glass-panel p-1-5">
                             <h3>Trạng Thái Khoản Vay</h3>
                             <canvas id="adminStatusChart" style="max-height: 250px;"></canvas>
                         </div>
-                        <div class="glass-panel" style="padding: 1.5rem;">
+                        <div class="glass-panel p-1-5">
                             <h3>Phân Bổ Dư Nợ</h3>
                             <canvas id="adminDebtChart" style="max-height: 250px;"></canvas>
                         </div>
@@ -120,7 +120,7 @@
                     <div class="page-header">
                         <h1>Tất Cả Khoản Vay</h1>
                     </div>
-                    <div class="glass-panel" style="padding: 1.5rem;">
+                    <div class="glass-panel p-1-5">
                         <div class="table-responsive">
                             <table class="data-table">
                                 <thead>
@@ -148,7 +148,7 @@
                     <div class="page-header">
                         <h1>Danh Sách Khách Hàng</h1>
                     </div>
-                    <div class="glass-panel" style="padding: 1.5rem;">
+                    <div class="glass-panel p-1-5">
                         <div class="table-responsive">
                             <table class="data-table">
                                 <thead>
@@ -180,7 +180,7 @@
                                 <label class="form-label" for="notifMessage">Nội dung thông báo</label>
                                 <textarea class="form-control" id="notifMessage" rows="4" placeholder="Nhập tin nhắn..." required></textarea>
                             </div>
-                            <button type="submit" class="btn btn-primary" style="width: 100%;">
+                            <button type="submit" class="btn btn-primary w-100">
                                 <i class="fas fa-paper-plane"></i> Phát Hành Thông Báo
                             </button>
                         </form>
@@ -197,7 +197,7 @@
                     <div class="page-header">
                         <h1>Yêu Cầu Thanh Toán</h1>
                     </div>
-                    <div class="glass-panel" style="padding: 1.5rem;">
+                    <div class="glass-panel p-1-5">
                         <div class="table-responsive">
                             <table class="data-table">
                                 <thead>
@@ -261,9 +261,9 @@
                 </div>
                 <p style="margin-top: 1rem; color: var(--text-secondary); font-size: 0.85rem;">Bạn muốn thực hiện thao tác gì với khoản vay này?</p>
                 
-                <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
-                    <button class="btn btn-primary" id="btnApprove" style="background: var(--success-color); color: #121212;"><i class="fas fa-check"></i> Duyệt Khoản Vay</button>
-                    <button class="btn btn-primary" id="btnReject" style="background: var(--danger-color);"><i class="fas fa-times"></i> Từ Chối</button>
+                <div class="chart-container-inner">
+                    <button class="btn btn-primary p-2 fw-700" id="btnApprove" style="background: var(--success-color); color: #121212;"><i class="fas fa-check"></i> Duyệt Khoản Vay</button>
+                    <button class="btn btn-primary p-2 fw-700" id="btnReject" style="background: var(--danger-color);"><i class="fas fa-times"></i> Từ Chối</button>
                 </div>
             </div>
         </div>
