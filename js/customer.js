@@ -38,14 +38,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     const getStatusBadge = (status) => {
-        const badges = {
-            'active': '<span class="badge badge-active">Đang vay</span>',
-            'pending': '<span class="badge badge-pending">Chờ duyệt</span>',
-            'approved': '<span class="badge badge-pending" style="background:#5a189a">Vừa được duyệt (Chờ nhận tiền)</span>',
-            'rejected': '<span class="badge badge-rejected">Từ chối</span>',
-            'paid': '<span class="badge badge-paid">Đã tất toán</span>'
-        };
-        return badges[status] || status;
+        switch (status) {
+            case 'pending': return '<span class="badge badge-pending">Đang xử lý</span>';
+            case 'approved': return '<span class="badge badge-active">Chờ nạp tiền</span>';
+            case 'verifying': return '<span class="badge badge-pending" style="background:#f39c12; color:white;">Đang xác minh tiền</span>';
+            case 'active': return '<span class="badge badge-paid">Đang hoạt động</span>';
+            case 'paid': return '<span class="badge badge-paid">Đã tất toán</span>';
+            case 'rejected': return '<span class="badge badge-rejected">Đã hủy</span>';
+            default: return status;
+        }
     };
 
 
@@ -310,6 +311,34 @@ document.addEventListener("DOMContentLoaded", () => {
         modal.classList.add('active');
         
         modal.querySelector('.close-btn').onclick = () => modal.classList.remove('active');
+
+        const confirmBtn = document.getElementById('btnConfirmSavingsTransfer');
+        if (confirmBtn) {
+            confirmBtn.onclick = async () => {
+                if (!confirm('Bạn chắc chắn đã chuyển tiền cho khoản tích lũy này?')) return;
+                
+                showLoader();
+                try {
+                    const res = await fetch(`${Config.BASE_URL}/api/savings/${id}`, {
+                        method: 'PUT',
+                        headers,
+                        body: JSON.stringify({ status: 'verifying' })
+                    });
+
+                    if (res.ok) {
+                        Toast.success('Đã gửi thông báo cho Admin! Vui lòng chờ xác nhận.');
+                        modal.classList.remove('active');
+                        fetchAllData();
+                    } else {
+                        Toast.error('Lỗi khi gửi xác nhận.');
+                    }
+                } catch (err) {
+                    Toast.error('Lỗi kết nối.');
+                } finally {
+                    hideLoader();
+                }
+            };
+        }
     };
     const renderDashboardStats = () => {
         let totalDebt = 0;

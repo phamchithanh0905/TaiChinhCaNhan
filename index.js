@@ -540,11 +540,25 @@ app.post('/api/savings', verifyToken, async (req, res) => {
 
 app.put('/api/savings/:id', verifyToken, async (req, res) => {
     try {
-        if (req.user.role !== 'admin') return res.status(403).json({ message: 'Không có quyền.' });
         const { id } = req.params;
         const { status, adminNote } = req.body;
-        await pool.query('UPDATE Savings SET status = $1, "adminNote" = $2 WHERE id = $3', [status, adminNote, id]);
-        res.json({ message: 'Cập nhật thành công.' });
+
+        const check = await pool.query('SELECT * FROM Savings WHERE id = $1', [id]);
+        if (check.rows.length === 0) return res.status(404).json({ message: 'Không tìm thấy.' });
+
+        // Nếu là admin: được sửa mọi thứ
+        if (req.user.role === 'admin') {
+            await pool.query('UPDATE Savings SET status = $1, "adminNote" = $2 WHERE id = $3', [status, adminNote, id]);
+            return res.json({ message: 'Cập nhật thành công.' });
+        }
+
+        // Nếu là khách: chỉ được đổi sang 'verifying' nếu của chính mình
+        if (String(check.rows[0].customerId) === String(req.user.id) && status === 'verifying') {
+            await pool.query('UPDATE Savings SET status = \'verifying\' WHERE id = $1', [id]);
+            return res.json({ message: 'Đã báo nạp tiền thành công.' });
+        }
+
+        return res.status(403).json({ message: 'Không có quyền.' });
     } catch (err) {
         res.status(500).json({ message: 'Server error' });
     }

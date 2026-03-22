@@ -34,7 +34,14 @@ document.addEventListener("DOMContentLoaded", () => {
             'pending': '<span class="badge badge-pending">Chờ duyệt</span>',
             'approved': '<span class="badge badge-pending" style="background:#5a189a">Đã duyệt (Chờ tiền)</span>',
             'rejected': '<span class="badge badge-rejected">Từ chối</span>',
-            'paid': '<span class="badge badge-paid">Đã tất toán</span>'
+            'paid': '<span class="badge badge-paid">Đã tất toán</span>',
+            // Savings statuses (added based on user instruction)
+            'pending_savings': '<span class="badge badge-pending">Đang xử lý</span>',
+            'approved_savings': '<span class="badge badge-active">Chờ nạp tiền</span>',
+            'verifying_savings': '<span class="badge badge-pending" style="background:#f39c12; color:white;">Đang xác minh tiền</span>',
+            'active_savings': '<span class="badge badge-paid">Đang hoạt động</span>',
+            'paid_savings': '<span class="badge badge-paid">Đã tất toán</span>',
+            'rejected_savings': '<span class="badge badge-rejected">Đã hủy</span>'
         };
         return badges[status] || status;
     };
@@ -701,11 +708,16 @@ document.addEventListener("DOMContentLoaded", () => {
             btnApprove.className = 'btn btn-primary';
             btnApprove.style.display = 'block';
             btnReject.style.display = 'block';
-        } else if (item.status === 'approved') {
+        } else if (item.status === 'verifying') {
             btnApprove.innerHTML = '<i class="fas fa-hand-holding-usd"></i> Xác Nhận Đã Nhận Tiền';
             btnApprove.className = 'btn btn-success';
             btnApprove.style.display = 'block';
-            btnReject.style.display = 'none';
+            btnReject.style.display = 'block';
+        } else if (item.status === 'approved') {
+            btnApprove.innerHTML = '<i class="fas fa-check-double"></i> Kích Hoạt Thủ Công';
+            btnApprove.className = 'btn btn-secondary';
+            btnApprove.style.display = 'block';
+            btnReject.style.display = 'block';
         } else {
             btnApprove.style.display = 'none';
             btnReject.style.display = 'none';
@@ -748,6 +760,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (item && item.status === 'pending') {
             updateSavingsStatus('approved');
         } else {
+            // Cho cả status 'verifying' và 'approved' (kích hoạt thủ công)
             updateSavingsStatus('active');
         }
     });
