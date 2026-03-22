@@ -230,12 +230,17 @@
                     });
 
                     if (response.ok) {
-                        const newUser = await response.json();
-                        localStorage.setItem('currentUser', JSON.stringify(newUser));
-                        Toast.success('Đăng ký thành công!');
-                        setTimeout(() => {
-                            window.location.href = 'customer.html';
-                        }, 1000);
+                        Toast.success('Đăng ký thành công! Vui lòng Nhập Mật Khẩu để Đăng Nhập.');
+                        
+                        // Switch back to login tab
+                        document.querySelector('.auth-tab[data-tab="login"]').click();
+                        
+                        // Auto-fill username
+                        const loginForm = document.getElementById('loginForm');
+                        if(loginForm) {
+                            loginForm.username.value = username;
+                            loginForm.password.focus();
+                        }
                     } else {
                         const errorData = await response.json();
                         const msg = errorData.message || 'Có lỗi xảy ra.';

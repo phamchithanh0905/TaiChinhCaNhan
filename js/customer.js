@@ -327,8 +327,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 `;
             } else if (loan.status === 'pending') {
                 actionBtn = `<button class="btn btn-secondary btn-sm btn-cancel" data-id="${loan.id}" style="color:var(--danger-color)" title="Hủy yêu cầu"><i class="fas fa-trash"></i></button>`;
-            } else if (loan.status === 'active' || loan.status === 'paid' || loan.status === 'rejected') {
-                actionBtn = `<button class="btn btn-secondary btn-sm btn-schedule" data-id="${loan.id}" title="Chi tiết"><i class="fas fa-info-circle"></i></button>`;
+            } else if (loan.status === 'active' || loan.status === 'paid') {
+                actionBtn = `<button class="btn btn-secondary btn-sm btn-schedule" data-id="${loan.id}" title="Xem Lịch Trả Nợ"><i class="fas fa-calendar-alt"></i></button>`;
+            } else {
+                actionBtn = `<span class="text-secondary">-</span>`;
             }
             
             return `
@@ -422,17 +424,28 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const cancelLoanRequest = async (id) => {
         if (!confirm('Bạn có chắc chắn muốn hủy yêu cầu vay này?')) return;
+        showLoader();
         try {
-            await fetch(`${Config.BASE_URL}/api/users/cancel-loan/${id}`, { method: 'DELETE', headers });
-await fetch(`${Config.BASE_URL}/api/loans/cancel/${id}`, { method: 'DELETE', headers });
-            alert('Đã hủy yêu cầu.');
-            fetchAllData();
-        } catch (err) { console.error(err); }
+            const res = await fetch(`${Config.BASE_URL}/api/loans/${id}`, { method: 'DELETE', headers });
+            if (res.ok) {
+                Toast.success('Đã hủy yêu cầu.');
+                fetchAllData();
+            } else {
+                const errorData = await res.json();
+                Toast.error(errorData.message || 'Không thể hủy khoản vay này.');
+            }
+        } catch (err) { 
+            console.error(err);
+            Toast.error('Lỗi kết nối server.');
+        } finally {
+            hideLoader();
+        }
     };
 
     document.querySelectorAll('.close-btn').forEach(btn => btn.addEventListener('click', closeModal));
     window.addEventListener('click', (e) => { 
-        if (e.target === paymentModal || e.target === document.getElementById('scheduleModal')) closeModal(); 
+        if (e.target === paymentModal) paymentModal.classList.remove('active');
+        if (e.target === document.getElementById('scheduleModal')) document.getElementById('scheduleModal').classList.remove('active');
     });
 
     document.getElementById('paymentForm').addEventListener('submit', async (e) => {
@@ -598,8 +611,27 @@ await fetch(`${Config.BASE_URL}/api/loans/cancel/${id}`, { method: 'DELETE', hea
     document.getElementById('logoutBtn').addEventListener('click', (e) => {
         e.preventDefault();
         localStorage.removeItem('currentUser');
+        localStorage.removeItem('token');
         window.location.href = 'login.html';
     });
+
+    // Mobile Menu Toggle Logic
+    const menuToggle = document.querySelector('.menu-toggle');
+    const sidebar = document.querySelector('.sidebar');
+    if(menuToggle && sidebar) {
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('active');
+        });
+        
+        // Cụm logic click ra ngoài (hoặc click link) để tự đóng menu trên mobile
+        document.querySelectorAll('.nav-links li').forEach(li => {
+            li.addEventListener('click', () => {
+                if(window.innerWidth <= 768) {
+                    sidebar.classList.remove('active');
+                }
+            });
+        });
+    }
 
     // Theme Toggle
     const themeBtn = document.getElementById('themeToggleBtn');

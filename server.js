@@ -277,6 +277,25 @@ app.post('/api/loans', verifyToken, async (req, res) => {
     }
 });
 
+app.delete('/api/loans/:id', verifyToken, async (req, res) => {
+    try {
+        const id = req.params.id;
+        const loanRes = await pool.query('SELECT * FROM Loans WHERE id = $1', [id]);
+        if (loanRes.rows.length === 0) return res.status(404).json({ message: 'Không tìm thấy khoản vay.' });
+        
+        const loan = loanRes.rows[0];
+        if (req.user.role === 'customer' && (String(loan.customerId) !== String(req.user.id) || loan.status !== 'pending')) {
+            return res.status(403).json({ message: 'Từ chối truy cập. Chỉ được hủy khoản vay đang chờ duyệt của chính mình.' });
+        }
+        
+        await pool.query('DELETE FROM Loans WHERE id = $1', [id]);
+        res.json({ message: 'Đã hủy khoản vay.' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 app.put('/api/loans/:id', verifyToken, async (req, res) => {
     if (req.user.role !== 'admin') return res.status(403).json({ message: 'Admin only' });
     try {

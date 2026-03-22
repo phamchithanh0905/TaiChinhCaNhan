@@ -368,11 +368,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const closeModal = () => {
         loanModal.classList.remove('active');
+        document.getElementById('userDetailsModal').style.display = 'none';
         currentActionLoanId = null;
     };
 
     document.querySelectorAll('.close-btn').forEach(btn => btn.addEventListener('click', closeModal));
-    window.addEventListener('click', (e) => { if (e.target === loanModal) closeModal(); });
+    window.addEventListener('click', (e) => { 
+        if (e.target === loanModal) closeModal(); 
+        if (e.target === document.getElementById('userDetailsModal')) closeModal();
+    });
 
     document.getElementById('btnApprove').addEventListener('click', async () => {
         if(!currentActionLoanId) return;
@@ -454,8 +458,26 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById('logoutBtn').addEventListener('click', (e) => {
         e.preventDefault();
         localStorage.removeItem('currentUser');
+        localStorage.removeItem('token');
         window.location.href = 'login.html';
     });
+
+    // Mobile Menu Toggle Logic
+    const menuToggle = document.querySelector('.menu-toggle');
+    const sidebar = document.querySelector('.sidebar');
+    if(menuToggle && sidebar) {
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('active');
+        });
+        
+        document.querySelectorAll('.nav-links li').forEach(li => {
+            li.addEventListener('click', () => {
+                if(window.innerWidth <= 768) {
+                    sidebar.classList.remove('active');
+                }
+            });
+        });
+    }
 
     // Theme logic
     const themeBtn = document.getElementById('themeToggleBtn');
