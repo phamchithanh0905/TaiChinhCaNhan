@@ -64,7 +64,7 @@ app.get('/api/notifications', async (req, res) => {
         res.json(result.rows);
     } catch (err) {
         console.error(err);
-        res.status(500).json({ message: 'Server error' });
+        res.status(500).json({ message: 'Server error', details: err.message });
     }
 });
 
