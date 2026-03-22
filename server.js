@@ -119,8 +119,21 @@ app.get('/api/settings', async (req, res) => {
 app.put('/api/settings/:id', verifyToken, async (req, res) => {
     if (req.user.role !== 'admin') return res.status(403).json({ message: 'Admin only' });
     try {
-        const { is_active } = req.body;
-        await pool.query('UPDATE SystemSettings SET is_active = $1 WHERE id = $2', [is_active, req.params.id]);
+        const { is_active, value_int, value_text } = req.body;
+        let query = 'UPDATE SystemSettings SET ';
+        const clauses = [];
+        const params = [];
+        let count = 1;
+
+        if (is_active !== undefined) { clauses.push(`is_active = $${count++}`); params.push(is_active); }
+        if (value_int !== undefined) { clauses.push(`value_int = $${count++}`); params.push(value_int); }
+        if (value_text !== undefined) { clauses.push(`value_text = $${count++}`); params.push(value_text); }
+        
+        if (clauses.length === 0) return res.status(400).json({ message: 'No data' });
+        query += clauses.join(', ') + ` WHERE id = $${count}`;
+        params.push(req.params.id);
+
+        await pool.query(query, params);
         res.json({ message: 'Updated' });
     } catch (err) {
         console.error(err);

@@ -132,32 +132,57 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        container.innerHTML = settings.map(s => `
+        container.innerHTML = settings.map(s => {
+            const isBankInfo = s.key.startsWith('bank_');
+            let name = s.key;
+            if (s.key === 'bank_name') name = 'Tên Ngân Hàng';
+            if (s.key === 'bank_account') name = 'Số Tài Khoản';
+            if (s.key === 'bank_holder') name = 'Chủ Tài Khoản';
+            
+            if (isBankInfo) {
+                return `
+                <div style="display:flex; flex-direction: column; padding: 1rem; border-bottom: 1px solid var(--border-color);">
+                    <label style="font-weight: bold; margin-bottom: 5px;">${name}</label>
+                    <input type="text" class="form-control bank-setting-input" data-id="${s.id}" value="${s.value_text || ''}" style="background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-color);">
+                </div>`;
+            }
+
+            return `
             <div style="display:flex; justify-content: space-between; align-items: center; padding: 1rem; border-bottom: 1px solid var(--border-color);">
                 <div>
-                    <strong style="display:block;">${s.name || `Gói Lãi suất ${s.value_int}%`}</strong>
+                    <strong style="display:block;">${s.name || `Gói Lãi suất ${s.value_int || 0}%`}</strong>
                     <small style="color: var(--text-secondary)">Lãi suất: ${s.value_int}%/tháng</small>
                 </div>
                 <div class="form-check form-switch">
                     <input class="form-check-input setting-toggle" type="checkbox" data-id="${s.id}" ${s.is_active ? 'checked' : ''} style="width: 50px; height: 25px; cursor: pointer;">
                 </div>
-            </div>
-        `).join('');
+            </div>`;
+        }).join('');
 
         document.querySelectorAll('.setting-toggle').forEach(toggle => {
             toggle.addEventListener('change', async (e) => {
                 const id = e.target.dataset.id;
-                const isActive = e.target.checked;
+                await fetch(`${Config.BASE_URL}/api/settings/${id}`, {
+                    method: 'PUT',
+                    headers,
+                    body: JSON.stringify({ is_active: e.target.checked })
+                });
+                Toast.success('Đã cập nhật trạng thái');
+            });
+        });
+
+        document.querySelectorAll('.bank-setting-input').forEach(input => {
+            input.addEventListener('blur', async (e) => {
+                const id = e.target.dataset.id;
+                const value = e.target.value;
                 try {
                     await fetch(`${Config.BASE_URL}/api/settings/${id}`, {
                         method: 'PUT',
                         headers,
-                        body: JSON.stringify({ is_active: isActive })
+                        body: JSON.stringify({ value_text: value })
                     });
-                    Toast.success('Đã cập nhật cài đặt');
-                } catch (err) {
-                    Toast.error('Lỗi cập nhật');
-                }
+                    Toast.success('Đã lưu thông tin ngân hàng');
+                } catch (err) { Toast.error('Lỗi khi lưu'); }
             });
         });
     };

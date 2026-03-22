@@ -21,6 +21,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let loans = [];
     let userProfile = null;
+    let systemSettings = [];
 
     const formatCurrency = (amount) => {
         return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
@@ -71,7 +72,8 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             loans = await loansRes.json();
-            updateDurationOptions(await settingsRes.json());
+            systemSettings = await settingsRes.json();
+            updateDurationOptions(systemSettings);
             renderNotifications(await notifRes.json());
             userProfile = await profileRes.json();
             
@@ -396,10 +398,18 @@ document.addEventListener("DOMContentLoaded", () => {
         payInput.max = currentLoanMaxPay;
         payInput.value = payAmount;
 
-        // Cập nhật QR động theo số tiền
+        const bName = systemSettings.find(s => s.key === 'bank_name')?.value_text || 'MBBank';
+        const bAcc = systemSettings.find(s => s.key === 'bank_account')?.value_text || '0888101901';
+        const bHolder = systemSettings.find(s => s.key === 'bank_holder')?.value_text || 'PHAM CHI THANH';
+
+        document.getElementById('bankNameDisplay').textContent = bName;
+        document.getElementById('bankAccountDisplay').textContent = bAcc;
+        document.getElementById('bankHolderDisplay').textContent = bHolder;
+
+        // Cập nhật QR động theo số tiền và thông tin bank mới nhất
         const qrImg = document.getElementById('paymentQR');
         if (qrImg) {
-            qrImg.src = `https://img.vietqr.io/image/MB-0888101901-compact.jpg?amount=${payAmount}&addInfo=Thanh%20toan%20${loan.id}&accountName=PHAM%20CHI%20THANH`;
+            qrImg.src = `https://img.vietqr.io/image/${bName}-${bAcc}-compact.jpg?amount=${payAmount}&addInfo=Thanh%20toan%20${loan.id}&accountName=${encodeURIComponent(bHolder)}`;
         }
         
         paymentModal.classList.add('active');
@@ -604,7 +614,10 @@ document.addEventListener("DOMContentLoaded", () => {
             const amount = e.target.value;
             const qrImg = document.getElementById('paymentQR');
             if (qrImg && currentPayLoanId) {
-                qrImg.src = `https://img.vietqr.io/image/MB-0888101901-compact.jpg?amount=${amount}&addInfo=Thanh%20toan%20${currentPayLoanId}&accountName=PHAM%20CHI%20THANH`;
+                const bName = systemSettings.find(s => s.key === 'bank_name')?.value_text || 'MBBank';
+                const bAcc = systemSettings.find(s => s.key === 'bank_account')?.value_text || '0888101901';
+                const bHolder = systemSettings.find(s => s.key === 'bank_holder')?.value_text || 'PHAM CHI THANH';
+                qrImg.src = `https://img.vietqr.io/image/${bName}-${bAcc}-compact.jpg?amount=${amount}&addInfo=Thanh%20toan%20${currentPayLoanId}&accountName=${encodeURIComponent(bHolder)}`;
             }
         });
     }
