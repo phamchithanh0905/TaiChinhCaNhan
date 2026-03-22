@@ -469,6 +469,45 @@
 
     <script src="js/data.js?v=3"></script>
     <script src="js/customer.js?v=3"></script>
+    <!-- Savings Deposit Modal -->
+    <div class="modal" id="savingsDepositModal">
+        <div class="modal-content glass-panel" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2>Hóa Đơn Nạp Tiền Tích Lũy</h2>
+                <button class="close-btn" title="Đóng"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div style="background: rgba(var(--primary-rgb), 0.1); padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem; border-left: 4px solid var(--primary-color);">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                        <span>Mã tích lũy:</span> <strong id="depositSavingsId"></strong>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                        <span>Số tiền nạp:</span> <strong id="depositAmount" style="font-size: 1.2rem; color: var(--primary-color);"></strong>
+                    </div>
+                    <div style="display:flex; justify-content:space-between;">
+                        <span>Lãi suất cam kết:</span> <strong id="depositRate" style="color: var(--success-color);"></strong>
+                    </div>
+                </div>
+
+                <div class="glass-panel" style="padding: 1.5rem; text-align: center; border: 1px dashed var(--border-color);">
+                    <h4 style="margin-bottom: 1rem; color: var(--text-secondary);"><i class="fas fa-university"></i> THÔNG TIN CHUYỂN KHOẢN</h4>
+                    <div style="font-size: 1.1rem; margin-bottom: 5px;"><strong id="sBankName">...</strong></div>
+                    <div style="font-size: 1.4rem; font-weight: 800; color: var(--primary-color); margin-bottom: 5px;"><span id="sBankAccount">...</span></div>
+                    <div style="margin-bottom: 1.5rem;"><strong id="sBankHolder">...</strong></div>
+                    
+                    <img id="savingsQR" src="" alt="QR Code" style="width: 200px; height: 200px; background: white; padding: 10px; border-radius: 8px; margin-bottom: 1rem;">
+                    
+                    <div style="font-size: 0.85rem; color: var(--text-secondary); background: rgba(255,255,255,0.05); padding: 10px; border-radius: 4px;">
+                        * Nội dung: <strong style="color: var(--warning-color);" id="sTransferNote">...</strong>
+                    </div>
+                </div>
+
+                <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 1.5rem; text-align: center;">
+                    <i class="fas fa-info-circle"></i> Vui lòng chuyển đúng số tiền và nội dung. Sau khi chuyển xong, hệ thống sẽ tự động cập nhật trạng thái trong vòng vài phút khi Admin xác nhận.
+                </p>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>
