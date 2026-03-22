@@ -11,26 +11,31 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let loans = [];
     let users = [];
+    let payments = [];
+
 
     const formatCurrency = (amount) => {
         return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
     };
 
     const calculateLoanSummary = (amount, rate, months) => {
-        const totalInterest = amount * (rate / 100) * (months / 12);
+        const totalInterest = amount * (rate / 100) * months;
         const totalPayable = amount + totalInterest;
         return { totalPayable };
     };
+
 
     const getStatusBadge = (status) => {
         const badges = {
             'active': '<span class="badge badge-active">Đang vay</span>',
             'pending': '<span class="badge badge-pending">Chờ duyệt</span>',
+            'approved': '<span class="badge badge-pending" style="background:#5a189a">Đã duyệt (Chờ tiền)</span>',
             'rejected': '<span class="badge badge-rejected">Từ chối</span>',
             'paid': '<span class="badge badge-paid">Đã tất toán</span>'
         };
         return badges[status] || status;
     };
+
 
     const token = localStorage.getItem('token');
     const headers = { 
@@ -46,8 +51,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 fetch(`${Config.BASE_URL}/api/users`, { headers, signal: controller.signal }),
                 fetch(`${Config.BASE_URL}/api/loans`, { headers, signal: controller.signal }),
                 fetch(`${Config.BASE_URL}/api/settings`, { headers, signal: controller.signal }),
-                fetch(`${Config.BASE_URL}/api/notifications`, { headers, signal: controller.signal })
+                fetch(`${Config.BASE_URL}/api/notifications`, { headers, signal: controller.signal }),
+                fetch(`${Config.BASE_URL}/api/payments`, { headers, signal: controller.signal })
             ]);
+
             
             clearTimeout(timeoutId);
 
@@ -60,11 +67,14 @@ document.addEventListener("DOMContentLoaded", () => {
             
             if (usersRes.ok) users = await usersRes.json();
             if (loansRes.ok) loans = await loansRes.json();
+            if (paymentsRes.ok) payments = await paymentsRes.json();
             
             refreshUI();
 
             if (settingsRes.ok) renderSettings(await settingsRes.json());
             if (notifRes.ok) renderNotifHistory(await notifRes.json());
+            if (paymentsRes.ok) renderPayments(payments);
+
                 
         } catch (err) {
             console.error('Admin fetching error, retrying...', err);
@@ -187,7 +197,76 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     };
 
+    const renderPayments = (list) => {
+        const tb = document.getElementById('paymentsTableBody');
+        if (!tb) return;
+        if (!Array.isArray(list) || list.length === 0) {
+            tb.innerHTML = '<tr><td colspan="7" style="text-align:center">Chưa có yêu cầu thanh toán nào.</td></tr>';
+            return;
+        }
+
+        tb.innerHTML = list.map(p => {
+            const statusText = p.status === 'pending' ? '<span class="badge badge-pending">Chờ duyệt</span>' : 
+                               (p.status === 'confirmed' ? '<span class="badge badge-paid">Thành công</span>' : '<span class="badge badge-rejected">Đã hủy</span>');
+            
+            let actions = '';
+            if (p.status === 'pending') {
+                actions = `
+                    <button class="btn btn-primary btn-sm btn-confirm-pay" data-id="${p.id}" style="background:var(--success-color); color:#121212"><i class="fas fa-check"></i> Xác nhận</button>
+                    <button class="btn btn-primary btn-sm btn-reject-pay" data-id="${p.id}" style="background:var(--danger-color);"><i class="fas fa-times"></i> Hủy</button>
+                `;
+            } else {
+                actions = '-';
+            }
+
+            return `
+                <tr>
+                    <td>#P${p.id}</td>
+                    <td>${p.customerName}</td>
+                    <td>${p.loanId}</td>
+                    <td style="color:var(--success-color); font-weight:700;">${formatCurrency(p.amount)}</td>
+                    <td>${new Date(p.createdAt).toLocaleString('vi-VN')}</td>
+                    <td>${statusText}</td>
+                    <td><div style="display:flex; gap:0.5rem">${actions}</div></td>
+                </tr>
+            `;
+        }).join('');
+
+        document.querySelectorAll('.btn-confirm-pay').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                const id = e.currentTarget.dataset.id;
+                if(confirm('Xác nhận đã nhận đủ số tiền và cộng vào dư nợ?')) {
+                    await updatePaymentStatus(id, 'confirmed');
+                }
+            });
+        });
+
+        document.querySelectorAll('.btn-reject-pay').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                const id = e.currentTarget.dataset.id;
+                if(confirm('Bạn sẽ hủy yêu cầu này vì chưa nhận được tiền?')) {
+                    await updatePaymentStatus(id, 'rejected');
+                }
+            });
+        });
+    };
+
+    const updatePaymentStatus = async (id, status) => {
+        showLoader();
+        try {
+            await fetch(`${Config.BASE_URL}/api/payments/${id}`, {
+                method: 'PUT',
+                headers,
+                body: JSON.stringify({ status })
+            });
+            Toast.success('Đã cập nhật giao dịch');
+            fetchAllData();
+        } catch (err) { Toast.error('Lỗi khi cập nhật giao dịch'); }
+        finally { hideLoader(); }
+    };
+
     const refreshUI = () => {
+
         renderDashboardStats();
         renderRecentLoans();
         renderAllLoans();
@@ -276,12 +355,15 @@ document.addEventListener("DOMContentLoaded", () => {
             let actionBtn = '';
             // Admin can process pending or close active
             if (loan.status === 'pending') {
-                actionBtn = `<button class="btn btn-primary btn-sm btn-action-loan" data-id="${loan.id}"><i class="fas fa-cog"></i> Phê Duyệt</button>`;
+                actionBtn = `<button class="btn btn-primary btn-sm btn-action-loan" data-id="${loan.id}"><i class="fas fa-check"></i> Phê Duyệt</button>`;
+            } else if (loan.status === 'approved') {
+                actionBtn = `<button class="btn btn-sm btn-action-loan" data-id="${loan.id}" style="background:#5a189a; color:#fff"><i class="fas fa-paper-plane"></i> Giải Ngân</button>`;
             } else if (loan.status === 'active') {
                 actionBtn = `<button class="btn btn-secondary btn-sm btn-action-loan" style="border-color: var(--success-color); color: var(--success-color);" data-id="${loan.id}"><i class="fas fa-check-double"></i> Tất Toán</button>`;
             } else {
                 actionBtn = `<span class="text-secondary">-</span>`;
             }
+
             
             const nextDate = loan.nextPaymentDate ? new Date(loan.nextPaymentDate).toLocaleDateString('vi-VN') : '-';
             const isOverdue = loan.status === 'active' && loan.nextPaymentDate && new Date(loan.nextPaymentDate) < new Date();
@@ -383,9 +465,14 @@ document.addEventListener("DOMContentLoaded", () => {
         const nextDateInput = document.getElementById('modalNextDate');
         
         if (loan.status === 'pending') {
-            btnApprove.innerHTML = '<i class="fas fa-check"></i> Duyệt Vay';
-            btnApprove.style.background = 'var(--success-color)';
+            btnApprove.innerHTML = '<i class="fas fa-check"></i> Phê Duyệt Vay';
+            btnApprove.style.background = 'var(--primary-color)';
             btnReject.style.display = 'inline-block';
+            dateGroup.style.display = 'none';
+        } else if (loan.status === 'approved') {
+            btnApprove.innerHTML = '<i class="fas fa-paper-plane"></i> XÁC NHẬN ĐÃ CHUYỂN TIỀN';
+            btnApprove.style.background = 'var(--success-color)';
+            btnReject.style.display = 'none';
             dateGroup.style.display = 'none';
         } else if (loan.status === 'active') {
             btnApprove.innerHTML = '<i class="fas fa-save"></i> Cập Nhật Hạn & Lưu';
@@ -400,6 +487,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 nextDateInput.value = '';
             }
         }
+
         
         loanModal.classList.add('active');
     };
@@ -422,6 +510,8 @@ document.addEventListener("DOMContentLoaded", () => {
         const nextDateVal = document.getElementById('modalNextDate').value;
 
         if (currentLoanStatus === 'pending') {
+            updateData = { status: 'approved' };
+        } else if (currentLoanStatus === 'approved') {
             updateData = { 
                 status: 'active', 
                 startDate: new Date().toISOString(),
@@ -432,6 +522,7 @@ document.addEventListener("DOMContentLoaded", () => {
             updateData = { status: 'active' };
             if (nextDateVal) updateData.nextPaymentDate = new Date(nextDateVal).toISOString();
         }
+
 
         updateData.adminNote = document.getElementById('modalAdminNote').value;
 

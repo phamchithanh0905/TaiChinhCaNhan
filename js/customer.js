@@ -28,21 +28,24 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     const calculateLoanSummary = (amount, rate, months) => {
-        const totalInterest = amount * (rate / 100) * (months / 12);
+        const totalInterest = amount * (rate / 100) * months;
         const totalPayable = amount + totalInterest;
         const monthlyInstallment = totalPayable / months;
         return { totalInterest, totalPayable, monthlyInstallment };
     };
 
+
     const getStatusBadge = (status) => {
         const badges = {
             'active': '<span class="badge badge-active">Đang vay</span>',
             'pending': '<span class="badge badge-pending">Chờ duyệt</span>',
+            'approved': '<span class="badge badge-pending" style="background:#5a189a">Vừa được duyệt (Chờ nhận tiền)</span>',
             'rejected': '<span class="badge badge-rejected">Từ chối</span>',
             'paid': '<span class="badge badge-paid">Đã tất toán</span>'
         };
         return badges[status] || status;
     };
+
 
     const token = localStorage.getItem('token');
     const headers = { 
@@ -503,20 +506,30 @@ document.addEventListener("DOMContentLoaded", () => {
 
         showLoader();
         try {
-            await fetch(`${Config.BASE_URL}/api/loans/${currentPayLoanId}`, {
-                method: 'PUT',
+            const res = await fetch(`${Config.BASE_URL}/api/payments`, {
+                method: 'POST',
                 headers,
-                body: JSON.stringify(updateData)
+                body: JSON.stringify({ 
+                    loanId: currentPayLoanId, 
+                    amount: amountToPay 
+                })
             });
-            closeModal();
-            Toast.success('Thanh toán thành công!');
-            fetchAllData();
+
+            if (res.ok) {
+                closeModal();
+                Toast.success('Yêu cầu thanh toán đã được gửi. Vui lòng chờ Admin duyệt!');
+                fetchAllData();
+            } else {
+                const errData = await res.json();
+                Toast.error(errData.message || 'Lỗi khi gửi yêu cầu');
+            }
         } catch(err) {
-            Toast.error('Lỗi khi thanh toán');
+            Toast.error('Lỗi kết nối server');
         } finally {
             hideLoader();
         }
     });
+
 
     // Apply Form Estimates
     const amountInput = document.querySelector('#applyLoanForm input[name="amount"]');

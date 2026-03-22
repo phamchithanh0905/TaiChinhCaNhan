@@ -60,11 +60,23 @@ pool.connect(async (err) => {
             await pool.query('INSERT INTO SystemSettings (key, value_text) VALUES ($1, $2) ON CONFLICT (key) DO NOTHING', ['bank_account', '0888101901']);
             await pool.query('INSERT INTO SystemSettings (key, value_text) VALUES ($1, $2) ON CONFLICT (key) DO NOTHING', ['bank_holder', 'PHAM CHI THANH']);
 
+            // Create Payments table if not exists
+            await pool.query(`
+                CREATE TABLE IF NOT EXISTS Payments (
+                    id SERIAL PRIMARY KEY,
+                    "loanId" VARCHAR(50) NOT NULL,
+                    "amount" DECIMAL(18,2) NOT NULL,
+                    "status" VARCHAR(20) DEFAULT 'pending', -- pending, confirmed, rejected
+                    "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY ("loanId") REFERENCES Loans(id)
+                )
+            `);
         } catch (seedErr) {
             console.error('Seeding error:', seedErr.message);
         }
     }
 });
+
 
 // --- Hệ thống xử lý lỗi toàn cục để Server tự hồi phục ---
 process.on('uncaughtException', (err) => {
@@ -329,7 +341,85 @@ app.post('/api/loans', verifyToken, async (req, res) => {
     }
 });
 
+// --- API Payments (Khách gửi yêu cầu, Admin duyệt) ---
+app.get('/api/payments', verifyToken, async (req, res) => {
+    try {
+        let query = `
+            SELECT p.*, l."customerId", u.name as "customerName" 
+            FROM Payments p 
+            JOIN Loans l ON p."loanId" = l.id 
+            JOIN Users u ON l."customerId" = u.id
+        `;
+        let params = [];
+        if (req.user.role === 'customer') {
+            query += ' WHERE l."customerId" = $1';
+            params.push(req.user.id);
+        }
+        query += ' ORDER BY p."createdAt" DESC';
+        const result = await pool.query(query, params);
+        res.json(result.rows);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+app.post('/api/payments', verifyToken, async (req, res) => {
+    try {
+        const { loanId, amount } = req.body;
+        // Kiểm tra xem có yêu cầu chuyển khoản nào đang chờ không để tránh spam
+        const check = await pool.query('SELECT * FROM Payments WHERE "loanId" = $1 AND status = \'pending\'', [loanId]);
+        if (check.rows.length > 0) return res.status(400).json({ message: 'Đã có yêu cầu thanh toán đang chờ duyệt.' });
+
+        await pool.query(
+            'INSERT INTO Payments ("loanId", amount, status) VALUES ($1, $2, \'pending\')',
+            [loanId, amount]
+        );
+        res.status(201).json({ message: 'Yêu cầu thanh toán đã được gửi tới Admin.' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+app.put('/api/payments/:id', verifyToken, async (req, res) => {
+    if (req.user.role !== 'admin') return res.status(403).json({ message: 'Từ chối truy cập.' });
+    try {
+        const { status } = req.body; // confirmed or rejected
+        const payRes = await pool.query('SELECT * FROM Payments WHERE id = $1', [req.params.id]);
+        if (payRes.rows.length === 0) return res.status(404).json({ message: 'Không thấy giao dịch.' });
+        
+        const payment = payRes.rows[0];
+        if (payment.status !== 'pending') return res.status(400).json({ message: 'Giao dịch này đã được xử lý.' });
+
+        if (status === 'confirmed') {
+            // Cập nhật số tiền vào khoản vay
+            const loanRes = await pool.query('SELECT * FROM Loans WHERE id = $1', [payment.loanId]);
+            const loan = loanRes.rows[0];
+            const newPaid = parseFloat(loan.amountPaid || 0) + parseFloat(payment.amount);
+            
+            // Tính tổng tiền cần trả để check xem đã xong chưa
+            // Lưu ý: Lấy rates từ settings hoặc lưu trong loan. Ở đây ta dùng công thuc lãi tháng
+            const totalPayable = parseFloat(loan.amount) + (parseFloat(loan.amount) * (parseFloat(loan.interestRate)/100) * parseInt(loan.durationMonths));
+            
+            const newStatus = newPaid >= totalPayable ? 'paid' : loan.status;
+
+            await pool.query(
+                'UPDATE Loans SET "amountPaid" = $1, status = $2 WHERE id = $3',
+                [newPaid, newStatus, payment.loanId]
+            );
+        }
+
+        await pool.query('UPDATE Payments SET status = $1 WHERE id = $2', [status, req.params.id]);
+        res.json({ message: 'Đã cập nhật giao dịch.' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 app.delete('/api/loans/:id', verifyToken, async (req, res) => {
+
     try {
         const id = req.params.id;
         const loanRes = await pool.query('SELECT * FROM Loans WHERE id = $1', [id]);
