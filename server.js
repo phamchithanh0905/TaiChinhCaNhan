@@ -36,6 +36,11 @@ const pool = new Pool({
     }
 });
 
+pool.on('error', (err) => {
+    console.error('LỖI DATABASE BẤT NGỜ:', err.message);
+});
+
+
 pool.connect(async (err) => {
     if (err) {
         console.error('Lỗi kết nối database:', err.stack);
@@ -374,6 +379,16 @@ app.put('/api/loans/:id', verifyToken, async (req, res) => {
         console.error(err);
         res.status(500).json({ message: 'Server error' });
     }
+});
+
+// --- Hệ thống xử lý lỗi toàn cục để Server tự hồi phục ---
+process.on('uncaughtException', (err) => {
+    console.error('LỖI NGHIÊM TRỌNG (Uncaught Exception):', err);
+    // Lưu ý: PM2 sẽ tự restart nếu process thoát, nhưng ta bắt ở đây để log lại
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('Promise chưa được xử lý (Unhandled Rejection) tại:', promise, 'Lý do:', reason);
 });
 
 app.delete('/api/loans/cancel/:id', verifyToken, async (req, res) => {
