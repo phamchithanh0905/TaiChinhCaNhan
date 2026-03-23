@@ -21,6 +21,9 @@
     </script>
     <script src="js/config.js?v=3"></script>
     <script src="js/utils.js?v=3"></script>
+    <!-- Sidebar Overlay (Mobile) -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
     <div class="layout">
         <aside class="sidebar glass-panel">
             <div class="sidebar-header">
@@ -542,6 +545,87 @@
             </div>
         </div>
     </div>
+    <!-- Bottom Navigation (Mobile) -->
+    <nav class="bottom-nav" id="bottomNav">
+        <div class="bottom-nav-inner">
+            <button class="bottom-nav-item active" data-view="dashboard" id="bnav-dashboard">
+                <i class="fas fa-home"></i>
+                <span>Tổng quan</span>
+            </button>
+            <button class="bottom-nav-item" data-view="apply" id="bnav-apply">
+                <i class="fas fa-plus-circle"></i>
+                <span>Đăng ký vay</span>
+            </button>
+            <button class="bottom-nav-item" data-view="myloans" id="bnav-myloans">
+                <i class="fas fa-history"></i>
+                <span>Khoản vay</span>
+            </button>
+            <button class="bottom-nav-item" data-view="savings" id="bnav-savings">
+                <i class="fas fa-piggy-bank"></i>
+                <span>Tiết kiệm</span>
+            </button>
+            <button class="bottom-nav-item" data-view="profile" id="bnav-profile">
+                <i class="fas fa-user-circle"></i>
+                <span>Hồ sơ</span>
+            </button>
+        </div>
+    </nav>
+
+    <script>
+    // ===== MOBILE RESPONSIVE LOGIC =====
+    (function() {
+        const menuToggle = document.querySelector('.menu-toggle');
+        const sidebar = document.querySelector('.sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+
+        // Toggle sidebar
+        if (menuToggle) {
+            menuToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('open');
+                overlay.classList.toggle('active');
+            });
+        }
+
+        // Close sidebar when overlay clicked
+        if (overlay) {
+            overlay.addEventListener('click', () => {
+                sidebar.classList.remove('open');
+                overlay.classList.remove('active');
+            });
+        }
+
+        // Bottom nav sync with sidebar nav
+        const bottomNavItems = document.querySelectorAll('.bottom-nav-item');
+        const sidebarNavItems = document.querySelectorAll('.nav-links li[data-view]');
+
+        bottomNavItems.forEach(item => {
+            item.addEventListener('click', () => {
+                const view = item.dataset.view;
+                // Trigger sidebar nav click
+                const sidebarItem = document.querySelector(`.nav-links li[data-view="${view}"]`);
+                if (sidebarItem) sidebarItem.click();
+                // Update bottom nav active
+                bottomNavItems.forEach(b => b.classList.remove('active'));
+                item.classList.add('active');
+            });
+        });
+
+        // Sync bottom nav when sidebar nav clicked
+        sidebarNavItems.forEach(item => {
+            item.addEventListener('click', () => {
+                const view = item.dataset.view;
+                bottomNavItems.forEach(b => b.classList.remove('active'));
+                const bnavItem = document.querySelector(`.bottom-nav-item[data-view="${view}"]`);
+                if (bnavItem) bnavItem.classList.add('active');
+                // Close sidebar on mobile
+                if (window.innerWidth <= 768) {
+                    sidebar.classList.remove('open');
+                    overlay.classList.remove('active');
+                }
+            });
+        });
+    })();
+    </script>
 </body>
 
 </html>

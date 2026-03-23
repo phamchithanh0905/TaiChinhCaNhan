@@ -437,6 +437,15 @@ a:hover {
 }
 
 /* Responsive Overrides */
+@media (max-width: 1024px) {
+  .sidebar {
+    width: 220px;
+  }
+  .main-content {
+    margin-left: 220px;
+  }
+}
+
 @media (max-width: 768px) {
   .sidebar {
     transform: translateX(-100%);
@@ -451,4 +460,63 @@ a:hover {
   .stats-grid {
     grid-template-columns: 1fr;
   }
+
+  /* Login Page */
+  .auth-wrapper {
+    padding: 1rem;
+    align-items: flex-start;
+    padding-top: 3rem;
+  }
+
+  .auth-card {
+    padding: 1.75rem 1.25rem;
+    max-width: 100%;
+    border-radius: var(--border-radius-sm);
+  }
+
+  .auth-header h1 {
+    font-size: 1.5rem;
+  }
+
+  /* Toast responsive */
+  .toast-container {
+    top: auto;
+    bottom: 1rem;
+    right: 0.75rem;
+    left: 0.75rem;
+  }
+
+  .toast {
+    min-width: unset;
+    width: 100%;
+  }
+
+  /* Theme toggle on login */
+  .theme-toggle {
+    top: 0.75rem;
+    right: 0.75rem;
+    width: 36px;
+    height: 36px;
+  }
 }
+
+@media (max-width: 480px) {
+  .auth-wrapper {
+    padding: 0.75rem;
+    padding-top: 2.5rem;
+  }
+
+  .auth-card {
+    padding: 1.5rem 1rem;
+  }
+
+  .form-control {
+    font-size: 16px; /* Prevents iOS zoom on input focus */
+  }
+
+  .btn {
+    padding: 0.7rem 1.2rem;
+    font-size: 0.9rem;
+  }
+}
+

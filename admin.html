@@ -19,6 +19,9 @@
     </script>
     <script src="js/config.js?v=3"></script>
     <script src="js/utils.js?v=3"></script>
+    <!-- Sidebar Overlay (Mobile) -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
     <div class="layout">
         <aside class="sidebar glass-panel">
             <div class="sidebar-header">
@@ -391,5 +394,79 @@
             </div>
         </div>
     </div>
+    <!-- Bottom Navigation Admin (Mobile) -->
+    <nav class="bottom-nav" id="bottomNav">
+        <div class="bottom-nav-inner">
+            <button class="bottom-nav-item active" data-view="dashboard" id="bnav-dashboard">
+                <i class="fas fa-home"></i>
+                <span>Tổng quan</span>
+            </button>
+            <button class="bottom-nav-item" data-view="loans" id="bnav-loans">
+                <i class="fas fa-money-bill-wave"></i>
+                <span>Khoản vay</span>
+            </button>
+            <button class="bottom-nav-item" data-view="users" id="bnav-users">
+                <i class="fas fa-users"></i>
+                <span>Khách hàng</span>
+            </button>
+            <button class="bottom-nav-item" data-view="payments" id="bnav-payments">
+                <i class="fas fa-check-circle"></i>
+                <span>Duyệt TT</span>
+            </button>
+            <button class="bottom-nav-item" data-view="settings" id="bnav-settings">
+                <i class="fas fa-cogs"></i>
+                <span>Cài đặt</span>
+            </button>
+        </div>
+    </nav>
+
+    <script>
+    // ===== MOBILE RESPONSIVE LOGIC =====
+    (function() {
+        const menuToggle = document.querySelector('.menu-toggle');
+        const sidebar = document.querySelector('.sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+
+        if (menuToggle) {
+            menuToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('open');
+                overlay.classList.toggle('active');
+            });
+        }
+
+        if (overlay) {
+            overlay.addEventListener('click', () => {
+                sidebar.classList.remove('open');
+                overlay.classList.remove('active');
+            });
+        }
+
+        const bottomNavItems = document.querySelectorAll('.bottom-nav-item');
+        const sidebarNavItems = document.querySelectorAll('.nav-links li[data-view]');
+
+        bottomNavItems.forEach(item => {
+            item.addEventListener('click', () => {
+                const view = item.dataset.view;
+                const sidebarItem = document.querySelector(`.nav-links li[data-view="${view}"]`);
+                if (sidebarItem) sidebarItem.click();
+                bottomNavItems.forEach(b => b.classList.remove('active'));
+                item.classList.add('active');
+            });
+        });
+
+        sidebarNavItems.forEach(item => {
+            item.addEventListener('click', () => {
+                const view = item.dataset.view;
+                bottomNavItems.forEach(b => b.classList.remove('active'));
+                const bnavItem = document.querySelector(`.bottom-nav-item[data-view="${view}"]`);
+                if (bnavItem) bnavItem.classList.add('active');
+                if (window.innerWidth <= 768) {
+                    sidebar.classList.remove('open');
+                    overlay.classList.remove('active');
+                }
+            });
+        });
+    })();
+    </script>
 </body>
 </html>
